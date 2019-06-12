@@ -64,3 +64,4 @@ class DataFrameFunctionApply(BaseEstimator, TransformerMixin):
             new_col_list.append(new_col_name)
             X[new_col_name] = X[col].map(self.func)
         return X.loc[:, new_col_list]
+
