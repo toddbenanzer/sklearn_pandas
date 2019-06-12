@@ -27,5 +27,11 @@ def validate_dataframe(possible_dataframe):
             type(possible_dataframe)))
 
 
+def validate_columns_exist(df, columns):
+    missing_columns = list(set(columns) - set(df.columns))
+    if len(missing_columns) > 0:
+        raise KeyError("The DataFrame does not include the columns: %s" % missing_columns)
+
+
 def retain_sign(x, func):
     return np.sign(x) * func(np.abs(x))
