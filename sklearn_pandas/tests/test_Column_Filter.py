@@ -1,6 +1,6 @@
 from unittest import TestCase
 import pandas as pd
-from sklearn_pandas.column_filter import ColumnSelector, DropColumns, ColumnSearchSelect
+from sklearn_pandas.column_filter import *
 
 
 class TestColumnSelector(TestCase):
@@ -62,3 +62,23 @@ class TestColumnSearchSelect(TestCase):
         expected_df = pd.DataFrame(columns=['aa', 'ba', ])
         css = ColumnSearchSelect(suffix='a')
         pd.testing.assert_index_equal(expected_df.columns, css.fit_transform(df).columns)
+
+
+class TestUniqueValueFilter(TestCase):
+
+    def test_UniqueValueFilter_keep_all(self):
+        df = pd.DataFrame({'A': [1, 1, ], 'B': [1, 2, ]})
+        uvf = UniqueValueFilter(min_unique_values=1)
+        pd.testing.assert_frame_equal(df, uvf.fit_transform(df))
+
+    def test_UniqueValueFilter_keep_some(self):
+        df = pd.DataFrame({'A': [1, 1, ], 'B': [1, 2, ]})
+        expected_df = pd.DataFrame({'B': [1, 2, ]})
+        uvf = UniqueValueFilter(min_unique_values=2)
+        pd.testing.assert_frame_equal(expected_df, uvf.fit_transform(df))
+
+    def test_UniqueValueFilter_keep_none(self):
+        df = pd.DataFrame({'A': [1, 1, ], 'B': [1, 2, ]})
+        expected_df = pd.DataFrame({'B': [1, 2, ]}).drop(columns='B')
+        uvf = UniqueValueFilter(min_unique_values=3)
+        pd.testing.assert_frame_equal(expected_df, uvf.fit_transform(df))

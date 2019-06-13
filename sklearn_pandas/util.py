@@ -33,5 +33,7 @@ def validate_columns_exist(df, columns):
         raise KeyError("The DataFrame does not include the columns: %s" % missing_columns)
 
 
-def retain_sign(x, func):
-    return np.sign(x) * func(np.abs(x))
+def retain_sign(func):
+    def safe_func(x):
+        return np.sign(x) * func(np.abs(x))
+    return safe_func

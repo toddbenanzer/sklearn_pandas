@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn_pandas.util import retain_sign
 
 
 class DataFrameFeatureUnion(BaseEstimator, TransformerMixin):
@@ -44,7 +45,7 @@ class DataFrameModelTransformer(TransformerMixin):
 
 class DataFrameFunctionApply(BaseEstimator, TransformerMixin):
 
-    def __init__(self, func=None, prefix='', suffix=''):
+    def __init__(self, func=None, prefix='', suffix='', safe_sign=False):
         self.func = func
         self.prefix = prefix
         self.suffix = suffix
@@ -62,6 +63,9 @@ class DataFrameFunctionApply(BaseEstimator, TransformerMixin):
         for col in X.columns:
             new_col_name = self.prefix + col + self.suffix
             new_col_list.append(new_col_name)
-            X[new_col_name] = X[col].map(self.func)
+            if self.safe_sign:
+                X[new_col_name] = X[col].map(retain_sign(self.func))
+            else:
+                X[new_col_name] = X[col].map(self.func)
         return X.loc[:, new_col_list]
 

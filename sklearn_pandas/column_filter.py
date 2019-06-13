@@ -85,3 +85,21 @@ class DropColumns(BaseEstimator, TransformerMixin):
     def transform(self, X):
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
         return X.loc[:, selected_columns]
+
+
+class UniqueValueFilter(BaseEstimator, TransformerMixin):
+
+    def __init__(self, min_unique_values=2):
+        self.min_unique_values = min_unique_values
+
+    def _validate_params(self, X):
+        pass
+
+    def fit(self, X, y=None):
+        self._validate_params(X)
+        self.drop_columns = [col for col in X.columns if X[col].nunique() < self.min_unique_values]
+        return self
+
+    def transform(self, X):
+        selected_columns = [col for col in X.columns if col not in self.drop_columns]
+        return X.loc[:, selected_columns]
