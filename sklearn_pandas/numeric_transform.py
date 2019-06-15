@@ -118,3 +118,34 @@ class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
         Xrs = self.scaler.transform(X)
         Xscaled = pd.DataFrame(Xrs, index=X.index, columns=X.columns)
         return Xscaled
+
+
+class MissingImputer(BaseEstimator, TransformerMixin):
+    def __init__(self, method='zero', create_indicators=False):
+        self.method = method
+        self.create_indicators = create_indicators
+
+    def _calc_impute_val(self, x):
+        if self.method == 'zero':
+            return 0
+        elif self.method == 'mean':
+            return np.nanmean(x.replace([np.inf, -np.inf], np.nan))
+        elif self.method == 'median':
+            return np.nanmedian(x.replace([np.inf, -np.inf], np.nan))
+        else:
+            raise NotImplementedError('method {0} not implemented'.format(self.method))
+
+    def fit(self, X, y=None):
+        self.impute_val = {}
+        for col in X.columns:
+            self.impute_val[col] = np.nan_to_num(self._calc_impute_val(X.loc[:, col]))
+        return self
+
+    def transform(self, X):
+        Xout = X.copy()
+        Xout = Xout.replace([np.inf, -np.inf], np.nan)
+        for col in Xout.columns:
+            if self.create_indicators:
+                Xout[col + '_isna'] = Xout[col].isna()
+            Xout[col] = Xout[col].fillna(self.impute_val[col])
+        return Xout
