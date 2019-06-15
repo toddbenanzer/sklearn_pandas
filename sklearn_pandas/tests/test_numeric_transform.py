@@ -106,6 +106,6 @@ class TestMissingImputer(TestCase):
         pd.testing.assert_frame_equal(
             imputer.fit_transform(X),
             pd.DataFrame({'A': [1.0, 2.0, 3.0, ],
-                          'B': [0.0, 0.0, 0.0, ],
                           'A_isna': [False, True, False, ],
+                          'B': [0.0, 0.0, 0.0, ],
                           'B_isna': [True, True, True, ]}))

@@ -53,13 +53,15 @@ class WinsorizeTransform(BaseEstimator, TransformerMixin):
 
 
 class PandasRobustScaler(BaseEstimator, TransformerMixin):
-    def __init__(self, with_centering=True, with_scaling=True, quantile_range=(25.0, 75.0)):
+    def __init__(self, with_centering=True, with_scaling=True, quantile_range=(25.0, 75.0), prefix='', suffix=''):
         self.scaler = None
         self.with_centering = with_centering
         self.with_scaling = with_scaling
         self.quantile_range = quantile_range
         self.center_ = None
         self.scale_ = None
+        self.prefix = prefix
+        self.suffix = suffix
 
     def fit(self, X, y=None):
         self.scaler = RobustScaler(with_centering=self.with_centering,
@@ -71,12 +73,12 @@ class PandasRobustScaler(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         Xrs = self.scaler.transform(X)
-        Xscaled = pd.DataFrame(Xrs, index=X.index, columns=X.columns)
+        Xscaled = pd.DataFrame(Xrs, index=X.index, columns=self.prefix + X.columns + self.suffix)
         return Xscaled
 
 
 class PandasStandardScaler(BaseEstimator, TransformerMixin):
-    def __init__(self, copy=True, with_mean=True, with_std=True):
+    def __init__(self, copy=True, with_mean=True, with_std=True, prefix='', suffix=''):
         self.scaler = None
         self.copy = copy
         self.with_mean = with_mean
@@ -84,6 +86,8 @@ class PandasStandardScaler(BaseEstimator, TransformerMixin):
         self.scale_ = None
         self.mean_ = None
         self.var_ = None
+        self.prefix = prefix
+        self.suffix = suffix
 
     def fit(self, X, y=None):
         self.scaler = StandardScaler(copy=self.copy, with_mean=self.with_mean, with_std=self.with_std)
@@ -95,17 +99,19 @@ class PandasStandardScaler(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         Xrs = self.scaler.transform(X)
-        Xscaled = pd.DataFrame(Xrs, index=X.index, columns=X.columns)
+        Xscaled = pd.DataFrame(Xrs, index=X.index, columns=self.prefix + X.columns + self.suffix)
         return Xscaled
 
 
 class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
-    def __init__(self, feature_range=(0, 1), copy=True):
+    def __init__(self, feature_range=(0, 1), copy=True, prefix='', suffix=''):
         self.scaler = None
         self.feature_range = feature_range
         self.copy = copy
         self.scale_ = None
         self.min_ = None
+        self.prefix = prefix
+        self.suffix = suffix
 
     def fit(self, X, y=None):
         self.scaler = MinMaxScaler(feature_range=self.feature_range, copy=self.copy)
@@ -116,14 +122,16 @@ class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         Xrs = self.scaler.transform(X)
-        Xscaled = pd.DataFrame(Xrs, index=X.index, columns=X.columns)
+        Xscaled = pd.DataFrame(Xrs, index=X.index, columns=self.prefix + X.columns + self.suffix)
         return Xscaled
 
 
 class MissingImputer(BaseEstimator, TransformerMixin):
-    def __init__(self, method='zero', create_indicators=False):
+    def __init__(self, method='zero', create_indicators=False, prefix='', suffix=''):
         self.method = method
         self.create_indicators = create_indicators
+        self.prefix = prefix
+        self.suffix = suffix
 
     def _calc_impute_val(self, x):
         if self.method == 'zero':
@@ -144,8 +152,12 @@ class MissingImputer(BaseEstimator, TransformerMixin):
     def transform(self, X):
         Xout = X.copy()
         Xout = Xout.replace([np.inf, -np.inf], np.nan)
+        new_col_list = []
         for col in Xout.columns:
+            new_col = self.prefix + col + self.suffix
+            new_col_list.append(new_col)
             if self.create_indicators:
                 Xout[col + '_isna'] = Xout[col].isna()
-            Xout[col] = Xout[col].fillna(self.impute_val[col])
-        return Xout
+                new_col_list.append(col + '_isna')
+            Xout[new_col] = Xout[col].fillna(self.impute_val[col])
+        return Xout.loc[:, new_col_list]
