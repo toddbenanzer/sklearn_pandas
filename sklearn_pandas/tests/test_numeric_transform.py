@@ -109,3 +109,18 @@ class TestMissingImputer(TestCase):
                           'A_isna': [False, True, False, ],
                           'B': [0.0, 0.0, 0.0, ],
                           'B_isna': [True, True, True, ]}))
+
+
+class TestAggByGroupTransform(TestCase):
+
+    def test_mean(self):
+        df = pd.DataFrame({'A': [1, 2, 3, 4, 5], 'B': ['A', 'A', 'A', 'B', 'B']})
+        expected_df = pd.DataFrame({'A_mean_by_B': [2.0, 2.0, 2.0, 4.5, 4.5], })
+        transform = AggByGroupTransform(groupby_vars=['B',], metric_vars=['A',], agg_func='mean')
+        pd.testing.assert_frame_equal(transform.fit_transform(df), expected_df)
+
+    def test_max(self):
+        df = pd.DataFrame({'A': [1, 2, 3, 4, 5], 'B': ['A', 'A', 'A', 'B', 'B']})
+        expected_df = pd.DataFrame({'A_max_by_B': [3, 3, 3, 5, 5], })
+        transform = AggByGroupTransform(groupby_vars=['B',], metric_vars=['A',], agg_func='max')
+        pd.testing.assert_frame_equal(transform.fit_transform(df), expected_df)

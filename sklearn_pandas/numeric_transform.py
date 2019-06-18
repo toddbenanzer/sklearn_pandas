@@ -161,3 +161,43 @@ class MissingImputer(BaseEstimator, TransformerMixin):
                 new_col_list.append(col + '_isna')
             Xout[new_col] = Xout[col].fillna(self.impute_val[col])
         return Xout.loc[:, new_col_list]
+
+
+class AggByGroupTransform(BaseEstimator, TransformerMixin):
+    def __init__(self, groupby_vars=[], metric_vars=[], agg_func='mean', delim='_'):
+        self.groupby_vars = groupby_vars
+        self.metric_vars = metric_vars
+        self.agg_func = agg_func
+        self.delim = delim
+
+    def _validate_params(self, X):
+        if self.agg_func == 'mean':
+            self._agg_func = np.nanmean
+        elif self.agg_func == 'min':
+            self._agg_func = np.nanmin
+        elif self.agg_func == 'max':
+            self._agg_func = np.nanmax
+        else:
+            raise NotImplementedError("Did not implement {0} aggregation function".format(self.agg_func))
+
+    def fit(self, X, y=None):
+        self._validate_params(X)
+        self.agg_series = {}
+        for gb in self.groupby_vars:
+            self.agg_series[gb] = {}
+            for metric in self.metric_vars:
+                agg_series = X.groupby(gb).agg({metric: self._agg_func})[metric]
+                self.agg_series[gb][metric] = agg_series
+        return self
+
+    def transform(self, X):
+        Xout = X.copy()
+        new_col_list = []
+        for gb in self.groupby_vars:
+            for metric in self.metric_vars:
+                new_col = metric + self.delim + self.agg_func + self.delim + 'by' + self.delim + gb
+                new_col_list.append(new_col)
+                #Xout[new_col] = self.agg_series[gb][metric].loc[X[gb]]
+                Xout[new_col] = [self.agg_series[gb][metric][x] for x in X[gb]]
+
+        return Xout.loc[:, new_col_list]
