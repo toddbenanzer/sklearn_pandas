@@ -103,3 +103,38 @@ class UniqueValueFilter(BaseEstimator, TransformerMixin):
     def transform(self, X):
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
         return X.loc[:, selected_columns]
+
+
+class ColumnByType(BaseEstimator, TransformerMixin):
+
+    def __init__(self, numerics=False, strings=False, dates=False, booleans=False, var_types=None):
+        self.numerics = numerics
+        self.strings = strings
+        self.dates = dates
+        self.booleans = booleans
+        self.var_types = var_types
+
+    def _validate_params(self, X):
+        self.selected_var_types = []
+        if self.numerics:
+            self.selected_var_types.extend(['integer', 'mixed-integer-float', 'floating', 'decimal', ])
+        elif self.strings:
+            self.selected_var_types.extend(['string', 'bytes', 'mixed-integer', 'categorical', ])
+        elif self.booleans:
+            self.selected_var_types.extend(['boolean', ])
+        elif self.dates:
+            self.selected_var_types.extend(['datetime', 'date', 'datetime64', 'timedelta', ])
+        else:
+            self.selected_var_types.extend(self.var_types)
+
+    @staticmethod
+    def _infer_dtype(x):
+        return pd.api.types.infer_dtype(x, skipna=True)
+
+    def fit(self, X, y=None):
+        self._validate_params(X)
+        self.selected_columns = X.columns[X.apply(self._infer_dtype).isin(self.selected_var_types)]
+        return self
+
+    def transform(self, X):
+        return X.loc[:, self.selected_columns]

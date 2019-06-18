@@ -215,62 +215,6 @@ class MultiColumnLabelEncoder:
     def fit_transform(self, X, y=None):
         return self.fit(X, y).transform(X)
 
-class CategoricalImputer(BaseEstimator, TransformerMixin):
-    """Categorical data missing value imputer."""
-
-    def __init__(self, variables=None) -> None:
-        if not isinstance(variables, list):
-            self.variables = [variables]
-        else:
-            self.variables = variables
-
-    def fit(self, X: pd.DataFrame, y: pd.Series = None
-            ) -> 'CategoricalImputer':
-        """Fit statement to accomodate the sklearn pipeline."""
-
-        return self
-
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Apply the transforms to the dataframe."""
-
-        X = X.copy()
-        for feature in self.variables:
-            X[feature] = X[feature].fillna('Missing')
-
-        return X
-
-
-
-class RareLabelCategoricalEncoder(BaseEstimator, TransformerMixin):
-    """Rare label categorical encoder"""
-
-    def __init__(self, tol=0.05, variables=None):
-        self.tol = tol
-        if not isinstance(variables, list):
-            self.variables = [variables]
-        else:
-            self.variables = variables
-
-    def fit(self, X, y=None):
-        # persist frequent labels in dictionary
-        self.encoder_dict_ = {}
-
-        for var in self.variables:
-            # the encoder will learn the most frequent categories
-            t = pd.Series(X[var].value_counts() / np.float(len(X)))
-            # frequent labels:
-            self.encoder_dict_[var] = list(t[t >= self.tol].index)
-
-        return self
-
-    def transform(self, X):
-        X = X.copy()
-        for feature in self.variables:
-            X[feature] = np.where(X[feature].isin(
-                self.encoder_dict_[feature]), X[feature], 'Rare')
-
-        return X
-
 
 class CategoricalEncoder(BaseEstimator, TransformerMixin):
     """String to numbers categorical encoder."""
@@ -311,53 +255,4 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
                 f'transforming categorical variables: {vars_.keys()}')
 
         return X
-
-
-class UncommonRemover(BaseEstimator, TransformerMixin):
-    """Merge uncommon values in a categorical column to an other value.
-    Note: Unseen values from fitting will also be merged.
-    Args:
-        threshold (float): data that is less frequent than this percentage
-            will be merged into a singular unique value
-        replacement (Optional): value with which to replace uncommon values
-    """
-
-    def __init__(self, threshold=0.01, replacement="UncommonRemover_Other"):
-        self.threshold = threshold
-        self.replacement = replacement
-
-    def fit(self, X, y=None):
-        """Find the uncommon values and set the replacement value.
-        Args:
-            X (:obj:`pd.DataFrame`): input dataframe
-        Returns:
-            self
-        """
-        X = check_df(X, single_column=True).iloc[:, 0]
-
-        vc_series = X.value_counts()
-        self.values_ = vc_series.index.values.tolist()
-        self.merge_values_ = vc_series[
-            vc_series <= (self.threshold * X.size)
-        ].index.values.tolist()
-
-        return self
-
-    def transform(self, X, y=None):
-        """Apply the computed transform to the passed in data.
-        Args:
-            X (:obj:`pd.DataFrame`): input DataFrame
-        Returns:
-            :obj:`pd.DataFrame`: transformed dataframe
-        """
-        X = check_df(X, single_column=True).iloc[:, 0]
-        check_is_fitted(self, ["values_", "merge_values_"])
-        X[
-            X.isin(self.merge_values_) | ~X.isin(self.values_)
-        ] = self.replacement
-        X = X.to_frame()
-
-        return X
-
-
 

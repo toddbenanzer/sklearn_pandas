@@ -82,3 +82,25 @@ class TestUniqueValueFilter(TestCase):
         expected_df = pd.DataFrame({'B': [1, 2, ]}).drop(columns='B')
         uvf = UniqueValueFilter(min_unique_values=3)
         pd.testing.assert_frame_equal(expected_df, uvf.fit_transform(df))
+
+
+class TestColumnByType(TestCase):
+
+    def test_selector_numerics(self):
+        df = pd.DataFrame({'A': [1, 1, ], 'B': ['a', 'b', ], 'C': [True, False, ], })
+        expected_df = pd.DataFrame({'A': [1, 1, ]})
+        filter = ColumnByType(numerics=True)
+        pd.testing.assert_frame_equal(expected_df, filter.fit_transform(df))
+
+    def test_selector_strings(self):
+        df = pd.DataFrame({'A': [1, 1, ], 'B': ['a', 'b', ], 'C': [True, False, ], })
+        expected_df = pd.DataFrame({'B': ['a', 'b', ],})
+        filter = ColumnByType(strings=True)
+        pd.testing.assert_frame_equal(expected_df, filter.fit_transform(df))
+
+    def test_selector_booleans(self):
+        df = pd.DataFrame({'A': [1, 1, ], 'B': ['a', 'b', ], 'C': [True, False, ], })
+        expected_df = pd.DataFrame({'C': [True, False, ],})
+        filter = ColumnByType(booleans=True)
+        pd.testing.assert_frame_equal(expected_df, filter.fit_transform(df))
+
