@@ -190,6 +190,12 @@ class AggByGroupTransform(BaseEstimator, TransformerMixin):
                 self.agg_series[gb][metric] = agg_series
         return self
 
+    def _get_agg_val(self, gb, metric, x):
+        try:
+            return self.agg_series[gb][metric][x]
+        except KeyError:
+            return np.nan
+
     def transform(self, X):
         Xout = X.copy()
         new_col_list = []
