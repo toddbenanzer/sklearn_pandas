@@ -138,3 +138,24 @@ class ColumnByType(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         return X.loc[:, self.selected_columns]
+
+
+class CorrelationFilter(BaseEstimator, TransformerMixin):
+
+    def __init__(self, threshold=0.95, method='pearson'):
+        self.threshold = threshold
+        self.method = method
+
+    def _validate_params(self, X):
+        pass
+
+    def fit(self, X, y=None):
+        self._validate_params(X)
+        corr_matrix = X.corr(self.method).abs()
+        upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
+        self.drop_columns = [column for column in upper.columns if any(upper[column] > self.threshold)]
+        return self
+
+    def transform(self, X):
+        selected_columns = [col for col in X.columns if col not in self.drop_columns]
+        return X.loc[:, selected_columns]

@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
 from sklearn_pandas.util import retain_sign
+from sklearn.decomposition import PCA, KernelPCA
 
 
 class QuantileBinning(BaseEstimator, TransformerMixin):
@@ -83,18 +84,12 @@ class PandasStandardScaler(BaseEstimator, TransformerMixin):
         self.copy = copy
         self.with_mean = with_mean
         self.with_std = with_std
-        self.scale_ = None
-        self.mean_ = None
-        self.var_ = None
         self.prefix = prefix
         self.suffix = suffix
 
     def fit(self, X, y=None):
         self.scaler = StandardScaler(copy=self.copy, with_mean=self.with_mean, with_std=self.with_std)
         self.scaler.fit(X)
-        self.scale_ = pd.Series(self.scaler.scale_, index=X.columns)
-        self.mean_ = pd.Series(self.scaler.mean_, index=X.columns)
-        self.var_ = pd.Series(self.scaler.var_, index=X.columns)
         return self
 
     def transform(self, X):
@@ -207,3 +202,48 @@ class AggByGroupTransform(BaseEstimator, TransformerMixin):
                 Xout[new_col] = [self.agg_series[gb][metric][x] for x in X[gb]]
 
         return Xout.loc[:, new_col_list]
+
+
+class PandasPCA(BaseEstimator, TransformerMixin):
+    def __init__(self, n_components=0.9, copy=True, prefix='pca_', suffix=''):
+        self.n_components = n_components
+        self.copy = copy
+        self.prefix = prefix
+        self.suffix = suffix
+
+    def fit(self, X, y=None):
+        self.scaler = StandardScaler(copy=self.copy, with_mean=True, with_std=True)
+        self.scaler.fit(X)
+        self.pca = PCA(n_components=self.n_components, whiten=True)
+        self.pca.fit(self.scaler.transform(X))
+        return self
+
+    def transform(self, X):
+        Xs = self.scaler.transform(X.copy())
+        Xpca = self.pca.transform(Xs)
+        column_names = [self.prefix + '{0:03g}'.format(n) + self.suffix for n in range(Xpca.shape[1])]
+        return pd.DataFrame(Xpca, index=X.index, columns=column_names)
+
+
+class PandasKernelPCA(BaseEstimator, TransformerMixin):
+    def __init__(self, n_components=None, kernel='linear', gamma=None, degree=3, copy=True, prefix='pca_', suffix=''):
+        self.n_components = n_components
+        self.kernel = kernel
+        self.gamma = gamma
+        self.degree = degree
+        self.copy = copy
+        self.prefix = prefix
+        self.suffix = suffix
+
+    def fit(self, X, y=None):
+        self.scaler = StandardScaler(copy=self.copy, with_mean=True, with_std=True)
+        self.scaler.fit(X)
+        self.kernelpca = KernelPCA(n_components=self.n_components, kernel=self.kernel, gamma=self.gamma, degree=self.degree)
+        self.kernelpca.fit(self.scaler.transform(X))
+        return self
+
+    def transform(self, X):
+        Xs = self.scaler.transform(X.copy())
+        Xpca = self.kernelpca.transform(Xs)
+        column_names = [self.prefix + '{0:03g}'.format(n) + self.suffix for n in range(Xpca.shape[1])]
+        return pd.DataFrame(Xpca, index=X.index, columns=column_names)
