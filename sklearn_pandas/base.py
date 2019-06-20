@@ -49,6 +49,7 @@ class DataFrameFunctionApply(BaseEstimator, TransformerMixin):
         self.func = func
         self.prefix = prefix
         self.suffix = suffix
+        self.safe_sign = safe_sign
 
     def _validate_params(self):
         if self.func is None:
@@ -69,3 +70,14 @@ class DataFrameFunctionApply(BaseEstimator, TransformerMixin):
                 X[new_col_name] = X[col].map(self.func)
         return X.loc[:, new_col_list]
 
+
+class TypeCast(BaseEstimator, TransformerMixin):
+
+    def __init__(self, dtype=float):
+        self.dtype = dtype
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        return X.astype(self.dtype)

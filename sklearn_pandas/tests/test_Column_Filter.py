@@ -123,3 +123,19 @@ class TestCorrelationFilter(TestCase):
         filter = CorrelationFilter()
         pd.testing.assert_frame_equal(expected_df, filter.fit_transform(df))
 
+    def test_UniqueValueFilter_spearman(self):
+        df = pd.DataFrame({
+            'A': [1, 2, 3, 4, 5, ],
+            'B': [1, 2, 3, 4, 4, ],
+            'C': [1, 2, 3, 4, 4, ],
+            'D': [1, 2, 3, 3, 3, ],
+            'E': [5, 2, 1, 4, 3, ],
+        })
+        expected_df = pd.DataFrame({
+            'A': [1, 2, 3, 4, 5, ],
+            'D': [1, 2, 3, 3, 3, ],
+            'E': [5, 2, 1, 4, 3, ],
+        })
+        filter = CorrelationFilter(method='spearman')
+        pd.testing.assert_frame_equal(expected_df, filter.fit_transform(df))
+

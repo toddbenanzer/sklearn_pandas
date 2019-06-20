@@ -122,9 +122,10 @@ class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
 
 
 class MissingImputer(BaseEstimator, TransformerMixin):
-    def __init__(self, method='zero', create_indicators=False, prefix='', suffix=''):
+    def __init__(self, method='zero', create_indicators=False, indicator_only=False, prefix='', suffix=''):
         self.method = method
         self.create_indicators = create_indicators
+        self.indicator_only = indicator_only
         self.prefix = prefix
         self.suffix = suffix
 
@@ -150,7 +151,8 @@ class MissingImputer(BaseEstimator, TransformerMixin):
         new_col_list = []
         for col in Xout.columns:
             new_col = self.prefix + col + self.suffix
-            new_col_list.append(new_col)
+            if not self.indicator_only:
+                new_col_list.append(new_col)
             if self.create_indicators:
                 Xout[col + '_isna'] = Xout[col].isna()
                 new_col_list.append(col + '_isna')
