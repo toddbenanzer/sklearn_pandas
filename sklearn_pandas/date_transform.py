@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn_pandas.util import validate_columns_exist
+from sklearn_pandas.util import validate_columns_exist, validate_dataframe
 
 
 class DateTransform(BaseEstimator, TransformerMixin):
@@ -15,6 +15,7 @@ class DateTransform(BaseEstimator, TransformerMixin):
         self.exact = exact
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         return self
 
     def _to_datetime(self, x):
@@ -23,6 +24,7 @@ class DateTransform(BaseEstimator, TransformerMixin):
                               origin='unix', cache=False)
 
     def transform(self, X):
+        X = validate_dataframe(X)
         # assumes X is a DataFrame
         Xdate = X.apply(self._to_datetime)
         return Xdate
@@ -53,6 +55,7 @@ class ExtractDatePart(BaseEstimator, TransformerMixin):
         self.exact = exact
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         return self
 
     def _to_datetime(self, x):
@@ -61,6 +64,7 @@ class ExtractDatePart(BaseEstimator, TransformerMixin):
                               origin='unix', cache=False)
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xout = X.copy()
         new_col_list = []
         for col in Xout.columns:

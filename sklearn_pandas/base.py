@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
-from sklearn_pandas.util import retain_sign
+from sklearn_pandas.util import retain_sign, validate_dataframe
 
 
 class DataFrameFeatureUnion(BaseEstimator, TransformerMixin):
@@ -10,6 +10,7 @@ class DataFrameFeatureUnion(BaseEstimator, TransformerMixin):
         self.list_of_transformers = list_of_transformers
 
     def fit(self, X, y=None, **fitparams):
+        X = validate_dataframe(X)
         self.fitted_transformers_ = []
         for transformer in self.list_of_transformers:
             fitted_trans = clone(transformer).fit(X, y=None, **fitparams)
@@ -17,6 +18,7 @@ class DataFrameFeatureUnion(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, **transformparams):
+        X = validate_dataframe(X)
         df_concat = pd.concat([t.transform(X) for t in self.fitted_transformers_], axis=1).copy()
         return df_concat
 
@@ -39,6 +41,7 @@ class DataFrameModelTransformer(TransformerMixin):
         return self
 
     def transform(self, X, **transform_params):
+        X = validate_dataframe(X)
         y = self.model.predict(X)
         return pd.DataFrame(y, columns=self.output_column_names)
 
@@ -56,10 +59,12 @@ class DataFrameFunctionApply(BaseEstimator, TransformerMixin):
             self.func = lambda x: x
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self._validate_params()
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         new_col_list = []
         for col in X.columns:
             new_col_name = self.prefix + col + self.suffix
@@ -77,7 +82,41 @@ class TypeCast(BaseEstimator, TransformerMixin):
         self.dtype = dtype
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         return X.astype(self.dtype)
+
+
+class PrintToScreen(BaseEstimator, TransformerMixin):
+
+    def __init__(self, max_rows=5, max_cols=10):
+        self.max_rows = max_rows
+        self.max_cols = max_cols
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        X = validate_dataframe(X)
+        print(X.to_string(max_rows=self.max_rows, max_cols=self.max_cols))
+        return X
+
+
+class CreateDummyColumn(BaseEstimator, TransformerMixin):
+
+    def __init__(self, value=0.0, column_name='__dummy__'):
+        self.value = value
+        self.column_name = column_name
+
+    def fit(self, X, y=None):
+        X = validate_dataframe(X)
+        return self
+
+    def transform(self, X):
+        X = validate_dataframe(X)
+        Xt = X.copy()
+        Xt[self.column_name] = self.value
+        return Xt

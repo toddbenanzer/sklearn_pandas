@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn_pandas.util import validate_columns_exist
+from sklearn_pandas.util import validate_columns_exist, validate_dataframe
 
 
 class StringImputer(BaseEstimator, TransformerMixin):
@@ -11,9 +11,11 @@ class StringImputer(BaseEstimator, TransformerMixin):
         self.value_if_none = value_if_none
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xout = X.copy()
         for col in Xout.columns:
             Xout[col][Xout[col].str.strip() == ''] = self.value_if_empty
@@ -28,6 +30,7 @@ class BundleRareValues(BaseEstimator, TransformerMixin):
         self.value_if_rare = value_if_rare
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self.common_categories = {}
         for col in X.columns:
             counts = pd.Series(X[col].value_counts() / np.float(len(X)))
@@ -36,6 +39,7 @@ class BundleRareValues(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xout = X.copy()
         for col in Xout.columns:
             Xout[col] = np.where(Xout[col].isin(
@@ -48,7 +52,8 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, delim='_'):
         self.delim = delim
 
-    def fit(self, X, y):
+    def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self.encodings = {}
         for col in X.columns:
             self.encodings[col] = np.sort(X[col].unique())
@@ -56,6 +61,7 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xout = X.copy()
         new_col_list = []
         for col in X.columns:

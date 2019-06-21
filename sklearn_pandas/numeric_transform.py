@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
-from sklearn_pandas.util import retain_sign
+from sklearn_pandas.util import retain_sign, validate_dataframe
 from sklearn.decomposition import PCA, KernelPCA
 
 
@@ -14,6 +14,7 @@ class QuantileBinning(BaseEstimator, TransformerMixin):
         self.suffix = suffix
 
     def fit(self, X, y=None, **fitparams):
+        X = validate_dataframe(X)
         self.cuts = {}
         for col in X.columns:
             cuts = X[col].quantile(q=np.linspace(0 + 1 / self.nbins, 1 - 1 / self.nbins, self.nbins - 1)).tolist()
@@ -21,6 +22,7 @@ class QuantileBinning(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, **transformparams):
+        X = validate_dataframe(X)
         new_col_list = []
         for col in X.columns:
             new_col = self.prefix + col + self.suffix
@@ -38,12 +40,14 @@ class WinsorizeTransform(BaseEstimator, TransformerMixin):
         self.suffix = suffix
 
     def fit(self, X, y=None, **fitparams):
+        X = validate_dataframe(X)
         self.clips = {}
         for col in X.columns:
             self.clips[col] = X[col].quantile(q=[self.clip_p, 1 - self.clip_p]).tolist()
         return self
 
     def transform(self, X, **transformparams):
+        X = validate_dataframe(X)
         new_col_list = []
         for col in X.columns:
             new_col = self.prefix + col + self.suffix
@@ -65,6 +69,7 @@ class PandasRobustScaler(BaseEstimator, TransformerMixin):
         self.suffix = suffix
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self.scaler = RobustScaler(with_centering=self.with_centering,
                                with_scaling=self.with_scaling, quantile_range=self.quantile_range)
         self.scaler.fit(X)
@@ -73,6 +78,7 @@ class PandasRobustScaler(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xrs = self.scaler.transform(X)
         Xscaled = pd.DataFrame(Xrs, index=X.index, columns=self.prefix + X.columns + self.suffix)
         return Xscaled
@@ -88,11 +94,13 @@ class PandasStandardScaler(BaseEstimator, TransformerMixin):
         self.suffix = suffix
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self.scaler = StandardScaler(copy=self.copy, with_mean=self.with_mean, with_std=self.with_std)
         self.scaler.fit(X)
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xrs = self.scaler.transform(X)
         Xscaled = pd.DataFrame(Xrs, index=X.index, columns=self.prefix + X.columns + self.suffix)
         return Xscaled
@@ -109,6 +117,7 @@ class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
         self.suffix = suffix
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self.scaler = MinMaxScaler(feature_range=self.feature_range, copy=self.copy)
         self.scaler.fit(X)
         self.scale_ = pd.Series(self.scaler.scale_, index=X.columns)
@@ -116,6 +125,7 @@ class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xrs = self.scaler.transform(X)
         Xscaled = pd.DataFrame(Xrs, index=X.index, columns=self.prefix + X.columns + self.suffix)
         return Xscaled
@@ -140,12 +150,14 @@ class MissingImputer(BaseEstimator, TransformerMixin):
             raise NotImplementedError('method {0} not implemented'.format(self.method))
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self.impute_val = {}
         for col in X.columns:
             self.impute_val[col] = np.nan_to_num(self._calc_impute_val(X.loc[:, col]))
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xout = X.copy()
         Xout = Xout.replace([np.inf, -np.inf], np.nan)
         new_col_list = []
@@ -178,6 +190,7 @@ class AggByGroupTransform(BaseEstimator, TransformerMixin):
             raise NotImplementedError("Did not implement {0} aggregation function".format(self.agg_func))
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self._validate_params(X)
         self.agg_series = {}
         for gb in self.groupby_vars:
@@ -194,6 +207,7 @@ class AggByGroupTransform(BaseEstimator, TransformerMixin):
             return np.nan
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xout = X.copy()
         new_col_list = []
         for gb in self.groupby_vars:
@@ -214,6 +228,7 @@ class PandasPCA(BaseEstimator, TransformerMixin):
         self.suffix = suffix
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self.scaler = StandardScaler(copy=self.copy, with_mean=True, with_std=True)
         self.scaler.fit(X)
         self.pca = PCA(n_components=self.n_components, whiten=True)
@@ -221,6 +236,7 @@ class PandasPCA(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xs = self.scaler.transform(X.copy())
         Xpca = self.pca.transform(Xs)
         column_names = [self.prefix + '{0:03g}'.format(n) + self.suffix for n in range(Xpca.shape[1])]
@@ -238,6 +254,7 @@ class PandasKernelPCA(BaseEstimator, TransformerMixin):
         self.suffix = suffix
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self.scaler = StandardScaler(copy=self.copy, with_mean=True, with_std=True)
         self.scaler.fit(X)
         self.kernelpca = KernelPCA(n_components=self.n_components, kernel=self.kernel, gamma=self.gamma, degree=self.degree)
@@ -245,6 +262,7 @@ class PandasKernelPCA(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         Xs = self.scaler.transform(X.copy())
         Xpca = self.kernelpca.transform(Xs)
         column_names = [self.prefix + '{0:03g}'.format(n) + self.suffix for n in range(Xpca.shape[1])]

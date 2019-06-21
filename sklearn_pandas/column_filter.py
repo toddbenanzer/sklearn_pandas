@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn_pandas.util import validate_columns_exist
+from sklearn_pandas.util import validate_columns_exist, validate_dataframe
 
 
 class ColumnSelector(BaseEstimator, TransformerMixin):
@@ -16,11 +16,13 @@ class ColumnSelector(BaseEstimator, TransformerMixin):
             self.columns = [self.columns, ]
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self._validate_params(X)
         validate_columns_exist(X, self.columns)
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         validate_columns_exist(X, self.columns)
         return X.loc[:, self.columns]
 
@@ -37,9 +39,11 @@ class ColumnSearchSelect(BaseEstimator, TransformerMixin):
         pass
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         num_columns = len(X.columns)
 
         if self.contains is None:
@@ -79,10 +83,12 @@ class DropColumns(BaseEstimator, TransformerMixin):
             self.drop_columns = [self.drop_columns, ]
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self._validate_params(X)
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
         return X.loc[:, selected_columns]
 
@@ -96,11 +102,13 @@ class UniqueValueFilter(BaseEstimator, TransformerMixin):
         pass
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self._validate_params(X)
         self.drop_columns = [col for col in X.columns if X[col].nunique() < self.min_unique_values]
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
         return X.loc[:, selected_columns]
 
@@ -132,11 +140,13 @@ class ColumnByType(BaseEstimator, TransformerMixin):
         return pd.api.types.infer_dtype(x, skipna=True)
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self._validate_params(X)
         self.selected_columns = X.columns[X.apply(self._infer_dtype).isin(self.selected_var_types)]
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         return X.loc[:, self.selected_columns]
 
 
@@ -150,6 +160,7 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
         pass
 
     def fit(self, X, y=None):
+        X = validate_dataframe(X)
         self._validate_params(X)
         corr_matrix = X.corr(self.method).abs()
         upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
@@ -157,5 +168,6 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        X = validate_dataframe(X)
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
         return X.loc[:, selected_columns]

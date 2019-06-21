@@ -1,24 +1,24 @@
 from unittest import TestCase
 import numpy as np
 import pandas as pd
-from sklearn_pandas.util import is_dataframe, validate_dataframe, validate_columns_exist, retain_sign
+from sklearn_pandas.util import is_pandas_dataframe, validate_dataframe, validate_columns_exist, retain_sign
 
 
 class TestIs_Dataframe(TestCase):
 
     def test_None(self):
-        self.assertFalse(is_dataframe(None))
+        self.assertFalse(is_pandas_dataframe(None))
 
     def test_dataframe(self):
         df = pd.DataFrame()
-        self.assertTrue(is_dataframe(df))
+        self.assertTrue(is_pandas_dataframe(df))
 
     def test_not_dataframe(self):
         df = [[1, 4, 5], [-5, 8, 9]]
-        self.assertFalse(is_dataframe(df))
+        self.assertFalse(is_pandas_dataframe(df))
 
         df = np.array([[1, 4, 5], [-5, 8, 9]])
-        self.assertFalse(is_dataframe(df))
+        self.assertFalse(is_pandas_dataframe(df))
 
 
 class TestValidate_dataframe(TestCase):
@@ -34,7 +34,7 @@ class TestValidate_dataframe(TestCase):
         df = [[1, 4, 5], [-5, 8, 9]]
         self.assertRaises(TypeError, validate_dataframe, df)
 
-        df = np.array([[1, 4, 5], [-5, 8, 9]])
+        df = ([1, 4, 5], [-5, 8, 9])
         self.assertRaises(TypeError, validate_dataframe, df)
 
 
