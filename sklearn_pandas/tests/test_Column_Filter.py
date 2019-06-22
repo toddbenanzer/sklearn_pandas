@@ -139,3 +139,38 @@ class TestCorrelationFilter(TestCase):
         filter = CorrelationFilter(method='spearman')
         pd.testing.assert_frame_equal(expected_df, filter.fit_transform(df))
 
+
+class TestPandasSelectKBest(TestCase):
+
+    def test_basic_function(self):
+        X = pd.DataFrame({
+            'A': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,],
+            'B': [1, 2, 3, 4, 5, 5, 4, 3, 2, 1,],
+            'C': [1, 2, 3, 4, 2, 3, 4, 3, 2, 1,],
+        })
+        y = pd.DataFrame({
+            'y': [0, 1, 2, 1, 0, 1, 2, 1, 0, 1],
+        })
+        expected_df = pd.DataFrame({
+            'B': [1, 2, 3, 4, 5, 5, 4, 3, 2, 1,],
+            'C': [1, 2, 3, 4, 2, 3, 4, 3, 2, 1,],
+        })
+
+        filter = PandasSelectKBest(k=2)
+        pd.testing.assert_frame_equal(expected_df, filter.fit_transform(X, y))
+
+    def test_basic_function_one_var(self):
+        X = pd.DataFrame({
+            'A': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,],
+            'B': [1, 2, 3, 4, 5, 5, 4, 3, 2, 1,],
+            'C': [1, 2, 3, 4, 2, 3, 4, 3, 2, 1,],
+        })
+        y = pd.DataFrame({
+            'y': [0, 1, 2, 1, 0, 1, 2, 1, 0, 1],
+        })
+        expected_df = pd.DataFrame({
+            'C': [1, 2, 3, 4, 2, 3, 4, 3, 2, 1,],
+        })
+
+        filter = PandasSelectKBest(k=1)
+        pd.testing.assert_frame_equal(expected_df, filter.fit_transform(X, y))

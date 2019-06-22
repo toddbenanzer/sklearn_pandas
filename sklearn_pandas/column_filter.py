@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn_pandas.util import validate_columns_exist, validate_dataframe
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.feature_selection import f_regression
 
 
 class ColumnSelector(BaseEstimator, TransformerMixin):
@@ -170,4 +172,29 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X = validate_dataframe(X)
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
+        return X.loc[:, selected_columns]
+
+
+class PandasSelectKBest(BaseEstimator, TransformerMixin):
+
+    def __init__(self, score_func=f_regression, k=10, ascending=True):
+        self.score_func = score_func
+        self.k = k
+        self.ascending = ascending
+
+    def _validate_params(self, X):
+        pass
+
+    def fit(self, X, y):
+        X = validate_dataframe(X)
+        self._validate_params(X)
+        var_performance = self.score_func(X, y)
+        if type(var_performance) == tuple:
+            var_performance = pd.Series(data=var_performance[-1], index=X.columns)
+        self.k_best_columns = var_performance.sort_values(ascending=self.ascending).head(self.k).index
+        return self
+
+    def transform(self, X):
+        X = validate_dataframe(X)
+        selected_columns = [col for col in X.columns if col in self.k_best_columns]
         return X.loc[:, selected_columns]
