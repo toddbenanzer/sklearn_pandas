@@ -71,3 +71,77 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
                 new_col_list.append(new_col)
 
         return Xout.loc[:, new_col_list]
+
+
+class CategoricalAggregate(BaseEstimator, TransformerMixin):
+    def __init__(self, agg_func='mean', rank=False, prefix='', suffix=''):
+        self.agg_func = agg_func
+        self.rank = rank
+        self.prefix = prefix
+        self.suffix = suffix
+
+    def _validate_params(self, X):
+        if self.agg_func == 'mean':
+            self._agg_func = np.nanmean
+        elif self.agg_func == 'min':
+            self._agg_func = np.nanmin
+        elif self.agg_func == 'max':
+            self._agg_func = np.nanmax
+        elif self.agg_func == 'median':
+            self._agg_func = np.nanmedian
+        else:
+            raise NotImplementedError("Did not implement {0} aggregation function".format(self.agg_func))
+
+    def fit(self, X, y=None):
+        X = validate_dataframe(X)
+        self._validate_params(X)
+        self.agg_series = {}
+        for col in X.columns:
+            if self.rank:
+                self.agg_series[col] = y.groupby(X[col]).agg({self._agg_func}).rank().iloc[:, 0]
+            else:
+                self.agg_series[col] = y.groupby(X[col]).agg({self._agg_func}).iloc[:,0]
+        return self
+
+    def transform(self, X):
+        X = validate_dataframe(X)
+        Xout = X.copy()
+        new_col_list = []
+        for col in X.columns:
+            new_col = self.prefix + col + self.suffix
+            new_col_list.append(new_col)
+            Xout[new_col] = [self.agg_series[col][x] for x in X[col]]
+        return Xout.loc[:, new_col_list]
+
+
+class IntegerToString(BaseEstimator, TransformerMixin):
+
+    def __init__(self, min_unique_values=5):
+        self.min_unique_values = min_unique_values
+        self.hidden_categorical_columns = []
+
+    def _validate_params(self, X):
+        pass
+
+    @staticmethod
+    def _infer_dtype(x):
+        return pd.api.types.infer_dtype(x, skipna=True)
+
+    def fit(self, X, y=None):
+        X = validate_dataframe(X)
+        self._validate_params(X)
+        self.hidden_categorical_columns = []
+        for col in X.columns:
+            is_integer = self._infer_dtype(X[col]) in ['integer', 'mixed-integer', ]
+            if is_integer:
+                num_unique = X[col].nunique()
+                if num_unique <= self.min_unique_values:
+                    self.hidden_categorical_columns.append(col)
+        return self
+
+    def transform(self, X):
+        X = validate_dataframe(X)
+        Xt = X.copy()
+        for col in self.hidden_categorical_columns:
+            Xt[col] = Xt[col].astype(str)
+        return Xt

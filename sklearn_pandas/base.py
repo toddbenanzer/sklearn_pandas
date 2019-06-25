@@ -4,6 +4,25 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn_pandas.util import retain_sign, validate_dataframe
 
 
+class DataFrameFixColumnOrder(BaseEstimator, TransformerMixin):
+
+    def __init__(self):
+        pass
+
+    def _validate_params(self):
+        pass
+
+    def fit(self, X, y=None):
+        X = validate_dataframe(X)
+        self._validate_params()
+        self.columns = X.columns
+        return self
+
+    def transform(self, X):
+        X = validate_dataframe(X)
+        return X.loc[:, self.columns]
+
+
 class DataFrameFeatureUnion(BaseEstimator, TransformerMixin):
 
     def __init__(self, list_of_transformers):

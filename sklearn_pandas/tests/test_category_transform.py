@@ -58,3 +58,54 @@ class TestCategoricalEncoder(TestCase):
         })
         transform = CategoricalEncoder()
         pd.testing.assert_frame_equal(transform.fit_transform(df), df_expected)
+
+
+class TestCategoricalAggregate(TestCase):
+
+    def test_simple_case(self):
+        df = pd.DataFrame({
+            'A': ['a', 'a', 'a', 'b', 'b',]
+        })
+
+        y = pd.DataFrame({
+            'y': [1, 2, 3, 4, 5, ]
+        })
+
+        df_expected = pd.DataFrame({
+            'A': [2.0, 2.0, 2.0, 4.5, 4.5,]
+        })
+
+        transform = CategoricalAggregate()
+        pd.testing.assert_frame_equal(transform.fit_transform(df, y), df_expected)
+
+    def test_y_as_vector(self):
+        df = pd.DataFrame({
+            'A': ['a', 'a', 'a', 'b', 'b',]
+        })
+
+        y = pd.DataFrame({
+            'y': [1, 2, 3, 4, 5, ]
+        })
+
+        df_expected = pd.DataFrame({
+            'A': [2.0, 2.0, 2.0, 4.5, 4.5,]
+        })
+
+        transform = CategoricalAggregate()
+        pd.testing.assert_frame_equal(transform.fit_transform(df, y['y']), df_expected)
+
+    def test_max_encoding(self):
+        df = pd.DataFrame({
+            'A': ['a', 'a', 'a', 'b', 'b',]
+        })
+
+        y = pd.DataFrame({
+            'y': [1, 2, 3, 4, 5, ]
+        })
+
+        df_expected = pd.DataFrame({
+            'A': [3, 3, 3, 5, 5,]
+        })
+
+        transform = CategoricalAggregate(agg_func='max')
+        pd.testing.assert_frame_equal(transform.fit_transform(df, y), df_expected)

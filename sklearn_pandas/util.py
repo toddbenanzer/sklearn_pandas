@@ -41,7 +41,8 @@ def is_numpy_array(obj):
     return issubclass(np.ndarray, type(obj))
 
 
-def validate_dataframe(df):
+def validate_dataframe(df_):
+    df = df_.copy()
     if is_pandas_dataframe(df):
         return df
     elif is_pandas_series(df):

@@ -186,6 +186,8 @@ class AggByGroupTransform(BaseEstimator, TransformerMixin):
             self._agg_func = np.nanmin
         elif self.agg_func == 'max':
             self._agg_func = np.nanmax
+        elif self.agg_func == 'median':
+            self._agg_func = np.nanmedian
         else:
             raise NotImplementedError("Did not implement {0} aggregation function".format(self.agg_func))
 
