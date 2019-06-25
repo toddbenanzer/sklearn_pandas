@@ -7,12 +7,5 @@ Sklearn Pipelines for Pandas
 
 Useful scikit-learn pipeline objects for dealing with pandas dataframes.
 
-
-Great resources
-===============
-
-
-Recommendations
-===============
-
+This project is broken into a few domains to aid with interpretability and more clear tracking of data fields when using pandas in conjunction with scikit-learn.
 
