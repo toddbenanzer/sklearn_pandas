@@ -64,3 +64,11 @@ def retain_sign(func):
         return np.sign(x) * func(np.abs(x))
 
     return safe_func
+
+
+def identity(x):
+    return x
+
+
+def recip1p(x):
+    return np.reciprocal(x+1)
