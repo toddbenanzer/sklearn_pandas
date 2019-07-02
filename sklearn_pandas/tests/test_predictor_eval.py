@@ -1,4 +1,7 @@
 from unittest import TestCase
+import pandas as pd
+import numpy as np
+from sklearn.metrics import mean_squared_error
 from sklearn_pandas.predictor_eval import *
 from sklearn_pandas.predictor_eval import _numeric_model_pipeline, _model_score_function_factory_numeric, \
     _model_score_function_factory_categorical, _model_score_function_factory_composite
@@ -64,7 +67,7 @@ class Test_model_score_function_factory_numeric(TestCase):
         y = pd.DataFrame({
             'y': [0, 1, 2, 3, 4, 4, 3, 2, 1, 0],
         })
-        expected_series = pd.Series([0.9800641985292654, 1.0, 0.0], index=['A', 'B', 'C'])
+        expected_series = pd.Series([0.9175184862983906, 1.0, 0.0], index=['A', 'B', 'C'])
         score_func = _model_score_function_factory_numeric(order=3)
         pd.testing.assert_series_equal(score_func(X, y), expected_series)
 
@@ -90,7 +93,7 @@ class Test_model_score_function_factory_numeric(TestCase):
         y = pd.DataFrame({
             'y': [0, 1, 2, 1, 0, 1, 2, 1, 0, 1],
         })
-        expected_series = pd.Series([0.1281436384044088, 0.42240178896094005, 0.020408163265306034], index=['A', 'B', 'C'])
+        expected_series = pd.Series([0.07262844241654909, 0.3480263578785747, 0.020408163265306256], index=['A', 'B', 'C'])
         score_func = _model_score_function_factory_numeric(order=3)
         pd.testing.assert_series_equal(score_func(X, y), expected_series)
 
@@ -103,7 +106,7 @@ class Test_model_score_function_factory_numeric(TestCase):
         y = pd.DataFrame({
             'y': [0, 1, 2, 1, 0, 1, 2, 1, 0, 1],
         })
-        expected_series = pd.Series([0.4272096171818397, 0.28302312340913943, 0.4800000000000001], index=['A', 'B', 'C'])
+        expected_series = pd.Series([0.45441206321589095, 0.3194670846394984, 0.48], index=['A', 'B', 'C'])
         score_func = _model_score_function_factory_numeric(order=3, eval_func=mean_squared_error)
         pd.testing.assert_series_equal(score_func(X, y), expected_series)
 
@@ -148,7 +151,7 @@ class Test_composite_model_pipeline(TestCase):
         y = pd.DataFrame({
             'y': [0, 1, 2, 1, 0, 1, 2, 1, 0, 1],
         })
-        expected_series = pd.Series([0.1281436384044088, 0.42240178896094005, 0.020408163265306034], index=['A', 'B', 'C'])
+        expected_series = pd.Series([0.07262844241654909, 0.3480263578785747, 0.020408163265306256], index=['A', 'B', 'C'])
         score_func = _model_score_function_factory_numeric(order=3)
         pd.testing.assert_series_equal(score_func(X, y), expected_series)
 

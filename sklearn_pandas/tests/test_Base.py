@@ -1,7 +1,7 @@
 from unittest import TestCase
 import pandas as pd
 from sklearn.dummy import DummyRegressor
-from sklearn_pandas.base import DataFrameModelTransformer, DataFrameFunctionApply
+from sklearn_pandas.transformers.base import DataFrameModelTransformer, DataFrameFunctionApply
 
 
 class TestModelTransformer(TestCase):

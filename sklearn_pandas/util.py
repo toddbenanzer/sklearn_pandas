@@ -41,14 +41,13 @@ def is_numpy_array(obj):
     return issubclass(np.ndarray, type(obj))
 
 
-def validate_dataframe(df_):
-    df = df_.copy()
+def validate_dataframe(df):
     if is_pandas_dataframe(df):
         return df
     elif is_pandas_series(df):
-        return df.to_frame()
+        return df.copy().to_frame()
     elif is_numpy_array(df):
-        return array_to_dataframe(df)
+        return array_to_dataframe(df.copy())
     else:
         raise TypeError('Transformer requires a pandas dataframe not {0}'.format(type(df)))
 

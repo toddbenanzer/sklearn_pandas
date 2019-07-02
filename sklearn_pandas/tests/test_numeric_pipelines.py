@@ -2,9 +2,8 @@ from unittest import TestCase
 import pandas as pd
 import numpy as np
 from sklearn_pandas.pipelines.numeric_pipelines import *
-
-
-
+from sklearn.metrics import explained_variance_score, mean_absolute_error, median_absolute_error
+from sklearn_pandas.util import recip1p
 
 
 class TestPipelines(TestCase):
@@ -63,4 +62,11 @@ class TestPipelines(TestCase):
         pipeline_performance = pipeline_eval(pipeline, X, y)
         print(pipeline_performance)
 
-
+    def test_eval_metric_list(self):
+        eval_func_list = [mean_squared_error, r2_score, explained_variance_score, mean_absolute_error,
+                          median_absolute_error]
+        for eval_func in eval_func_list:
+            X, y = self.get_standard_X_y()
+            pipeline = function_list_pipeline(function_list=(identity, np.log1p, recip1p, np.sign, np.abs, ))
+            pipeline_performance = pipeline_eval(pipeline, X, y, base_model=LinearRegression(), eval_func=eval_func)
+            print(pipeline_performance)

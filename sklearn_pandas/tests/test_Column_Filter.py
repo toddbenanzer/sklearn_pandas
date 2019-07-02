@@ -1,6 +1,5 @@
 from unittest import TestCase
-import pandas as pd
-from sklearn_pandas.column_filter import *
+from sklearn_pandas.transformers.column_filter import *
 
 
 class TestColumnSelector(TestCase):

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from sklearn_pandas.row_filter import *
+from sklearn_pandas.transformers.row_filter import *
 import pandas as pd
 
 

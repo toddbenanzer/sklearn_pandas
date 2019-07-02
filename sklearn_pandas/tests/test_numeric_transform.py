@@ -1,5 +1,5 @@
 from unittest import TestCase
-from sklearn_pandas.numeric_transform import *
+from sklearn_pandas.transformers.numeric_transform import *
 
 
 class TestQuantileBinning(TestCase):

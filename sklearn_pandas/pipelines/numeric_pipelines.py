@@ -1,13 +1,10 @@
-import numpy as np
-import pandas as pd
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
-from sklearn_pandas.base import *
-from sklearn_pandas.column_filter import *
-from sklearn_pandas.category_transform import *
-from sklearn_pandas.numeric_transform import *
-from sklearn_pandas.util import identity, recip1p
+from sklearn_pandas.transformers.base import *
+from sklearn_pandas.transformers.column_filter import *
+from sklearn_pandas.transformers.category_transform import *
+from sklearn_pandas.transformers.numeric_transform import *
+from sklearn_pandas.util import identity
 
 
 def identity_pipeline():

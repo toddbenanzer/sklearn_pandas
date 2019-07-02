@@ -1,5 +1,5 @@
 from unittest import TestCase
-from sklearn_pandas.category_transform import *
+from sklearn_pandas.transformers.category_transform import *
 
 
 class TestStringImputer(TestCase):

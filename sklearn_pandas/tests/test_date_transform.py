@@ -1,6 +1,6 @@
 from unittest import TestCase
 import datetime
-from sklearn_pandas.date_transform import *
+from sklearn_pandas.transformers.date_transform import *
 
 
 class TestDateTransform(TestCase):

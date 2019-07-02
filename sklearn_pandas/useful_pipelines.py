@@ -1,10 +1,8 @@
-import numpy as np
-import pandas as pd
 from sklearn.pipeline import Pipeline
-from sklearn_pandas.base import *
-from sklearn_pandas.column_filter import *
-from sklearn_pandas.category_transform import *
-from sklearn_pandas.numeric_transform import *
+from sklearn_pandas.transformers.base import *
+from sklearn_pandas.transformers.column_filter import *
+from sklearn_pandas.transformers.category_transform import *
+from sklearn_pandas.transformers.numeric_transform import *
 
 # TODO Create Pipelines for preparation, manufacturing, and variable selection
 # Data Prep

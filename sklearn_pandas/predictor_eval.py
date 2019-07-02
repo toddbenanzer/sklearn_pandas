@@ -1,13 +1,11 @@
-import pandas as pd
-import numpy as np
 from sklearn.linear_model import LinearRegression
-from sklearn.datasets import load_boston
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import r2_score
 from sklearn.pipeline import Pipeline
-from sklearn_pandas.base import TypeCast, DataFrameFeatureUnion, DataFrameFunctionApply, DataFrameModelTransformer, PrintToScreen, CreateDummyColumn
-from sklearn_pandas.numeric_transform import MissingImputer
-from sklearn_pandas.category_transform import StringImputer, BundleRareValues, CategoricalEncoder
-from sklearn_pandas.column_filter import ColumnByType
+from sklearn_pandas.transformers.base import TypeCast, DataFrameFeatureUnion, DataFrameFunctionApply, DataFrameModelTransformer, \
+    CreateDummyColumn
+from sklearn_pandas.transformers.numeric_transform import MissingImputer
+from sklearn_pandas.transformers.category_transform import StringImputer, BundleRareValues, CategoricalEncoder
+from sklearn_pandas.transformers.column_filter import ColumnByType
 
 def _numeric_prep_pipeline(order):
     pipeline = Pipeline(steps=[
