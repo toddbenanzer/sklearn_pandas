@@ -141,7 +141,7 @@ class IntegerToString(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
-        Xt = X.copy()
+        X = X.copy()
         for col in self.hidden_categorical_columns:
-            Xt[col] = Xt[col].astype(str)
-        return Xt
+            X[col] = X[col].astype(str)
+        return X

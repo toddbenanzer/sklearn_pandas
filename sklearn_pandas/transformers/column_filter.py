@@ -25,6 +25,7 @@ class ColumnSelector(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         validate_columns_exist(X, self.columns)
         return X.loc[:, self.columns]
 
@@ -46,6 +47,7 @@ class ColumnSearchSelect(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         num_columns = len(X.columns)
 
         if self.contains is None:
@@ -91,6 +93,7 @@ class DropColumns(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
         return X.loc[:, selected_columns]
 
@@ -111,6 +114,7 @@ class UniqueValueFilter(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
         return X.loc[:, selected_columns]
 
@@ -149,6 +153,7 @@ class ColumnByType(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         return X.loc[:, self.selected_columns]
 
 
@@ -171,6 +176,7 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
         return X.loc[:, selected_columns]
 
@@ -196,5 +202,6 @@ class PandasSelectKBest(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         selected_columns = [col for col in X.columns if col in self.k_best_columns]
         return X.loc[:, selected_columns]

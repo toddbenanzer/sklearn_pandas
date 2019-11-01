@@ -15,5 +15,6 @@ class DropNARowFilter(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y=None):
         X = validate_dataframe(X)
+        X = X.copy()
         subset = [c for c in X.columns if c not in self.excluded_columns]
         return X.replace([np.inf, -np.inf], np.nan).dropna(axis=0, how='any', inplace=False, subset=subset)

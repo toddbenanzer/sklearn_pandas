@@ -25,6 +25,7 @@ class DateTransform(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         # assumes X is a DataFrame
         Xdate = X.apply(self._to_datetime)
         return Xdate

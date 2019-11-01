@@ -23,6 +23,7 @@ class QuantileBinning(BaseEstimator, TransformerMixin):
 
     def transform(self, X, **transformparams):
         X = validate_dataframe(X)
+        X = X.copy()
         new_col_list = []
         for col in X.columns:
             new_col = self.prefix + col + self.suffix
@@ -48,6 +49,7 @@ class WinsorizeTransform(BaseEstimator, TransformerMixin):
 
     def transform(self, X, **transformparams):
         X = validate_dataframe(X)
+        X = X.copy()
         new_col_list = []
         for col in X.columns:
             new_col = self.prefix + col + self.suffix
@@ -79,6 +81,7 @@ class PandasRobustScaler(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         Xrs = self.scaler.transform(X)
         Xscaled = pd.DataFrame(Xrs, index=X.index, columns=self.prefix + X.columns + self.suffix)
         return Xscaled
@@ -101,6 +104,7 @@ class PandasStandardScaler(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         Xrs = self.scaler.transform(X)
         Xscaled = pd.DataFrame(Xrs, index=X.index, columns=self.prefix + X.columns + self.suffix)
         return Xscaled
@@ -126,6 +130,7 @@ class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         Xrs = self.scaler.transform(X)
         Xscaled = pd.DataFrame(Xrs, index=X.index, columns=self.prefix + X.columns + self.suffix)
         return Xscaled
@@ -239,7 +244,8 @@ class PandasPCA(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
-        Xs = self.scaler.transform(X.copy())
+        X = X.copy()
+        Xs = self.scaler.transform(X)
         Xpca = self.pca.transform(Xs)
         column_names = [self.prefix + '{0:03g}'.format(n) + self.suffix for n in range(Xpca.shape[1])]
         return pd.DataFrame(Xpca, index=X.index, columns=column_names)
@@ -265,7 +271,8 @@ class PandasKernelPCA(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
-        Xs = self.scaler.transform(X.copy())
+        X = X.copy()
+        Xs = self.scaler.transform(X)
         Xpca = self.kernelpca.transform(Xs)
         column_names = [self.prefix + '{0:03g}'.format(n) + self.suffix for n in range(Xpca.shape[1])]
         return pd.DataFrame(Xpca, index=X.index, columns=column_names)

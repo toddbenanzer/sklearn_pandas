@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scipy as sp
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn_pandas.util import retain_sign, validate_dataframe
 
@@ -20,6 +21,7 @@ class DataFrameFixColumnOrder(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         return X.loc[:, self.columns]
 
 
@@ -38,6 +40,7 @@ class DataFrameFeatureUnion(BaseEstimator, TransformerMixin):
 
     def transform(self, X, **transformparams):
         X = validate_dataframe(X)
+        X = X.copy()
         df_concat = pd.concat([t.transform(X) for t in self.fitted_transformers_], axis=1).copy()
         return df_concat
 
@@ -84,6 +87,7 @@ class DataFrameFunctionApply(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         new_col_list = []
         for col in X.columns:
             new_col_name = self.prefix + col + self.suffix
@@ -106,6 +110,7 @@ class TypeCast(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         return X.astype(self.dtype)
 
 
@@ -120,6 +125,7 @@ class PrintToScreen(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
+        X = X.copy()
         print(X.to_string(max_rows=self.max_rows, max_cols=self.max_cols))
         return X
 
@@ -136,6 +142,92 @@ class CreateDummyColumn(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
-        Xt = X.copy()
-        Xt[self.column_name] = self.value
-        return Xt
+        X = X.copy()
+        X[self.column_name] = self.value
+        return X
+
+
+class InferType(BaseEstimator, TransformerMixin):
+
+    def __init__(self):
+        self.types = {}
+
+    def _validate_params(self, X=None):
+        pass
+
+    @staticmethod
+    def _infer_dtype(x):
+        return pd.api.types.infer_dtype(x, skipna=True)
+
+    def fit(self, X, y=None):
+        X = validate_dataframe(X)
+        self._validate_params(X)
+        self.types = {}
+        for col in X.columns:
+            self.types[col] = self._infer_dtype(X[col])
+        return self
+
+    def transform(self, X):
+        X = validate_dataframe(X)
+        X = X.copy()
+        return X.copy()
+
+
+class ProfileDataFrame(BaseEstimator, TransformerMixin):
+
+    def __init__(self):
+        self.col_attributes = {}
+
+    def _validate_params(self, X=None):
+        pass
+
+    @staticmethod
+    def _infer_dtype(x):
+        return pd.api.types.infer_dtype(x, skipna=True)
+
+    @staticmethod
+    def _numeric_profile(x):
+        return {
+            'mean': np.nanmean(x),
+            'std': np.nanstd(x),
+            'median': np.nanmedian(x),
+            'min': np.nanmin(x),
+            'max': np.nanmax(x),
+            'percentile_25': np.nanpercentile(x, 0.25),
+            'percentile_75': np.nanpercentile(x, 0.75),
+            'percent_missing': x.isna().mean(),
+            'percent_infinite': np.isinf(x).mean(),
+            'percent_finite': np.isfinite(x).mean(),
+            'percent_unique': len(np.unique(x)) / len(x),
+            'num_unique': len(np.unique(x))
+        }
+
+    @staticmethod
+    def _string_profile(x):
+        string_len_array = x.str.len()
+        return {
+            'most_frequent': x.value_counts().nlargest(n=1).index[0],
+            'most_frequent_percent': x.value_counts().nlargest(n=1).values[0] / len(x),
+            'avg_len': np.nanmean(string_len_array),
+            'min_len': np.nanmin(string_len_array),
+            'max_len': np.nanmax(string_len_array),
+            'min': np.nanmin(x),
+            'max': np.nanmax(x),
+            'percent_missing': x.isna().mean(),
+            'percent_blank': (x.str.strip() == '').mean(),
+            'percent_unique': len(np.unique(x)) / len(x),
+            'num_unique': len(np.unique(x))
+        }
+
+    def fit(self, X, y=None):
+        X = validate_dataframe(X)
+        self._validate_params(X)
+        self.types = {}
+        for col in X.columns:
+            self.types[col] = self._infer_dtype(X[col])
+        return self
+
+    def transform(self, X):
+        X = validate_dataframe(X)
+        X = X.copy()
+        return X.copy()
