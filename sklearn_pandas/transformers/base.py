@@ -64,6 +64,7 @@ class DataFrameModelTransformer(TransformerMixin):
 
     def transform(self, X, **transform_params):
         X = validate_dataframe(X)
+        X = X.copy()
         y = self.model.predict(X)
         return pd.DataFrame(y, columns=self.output_column_names)
 
