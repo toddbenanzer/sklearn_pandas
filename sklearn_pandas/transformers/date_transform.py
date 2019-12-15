@@ -66,52 +66,52 @@ class ExtractDatePart(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
-        Xout = X.copy()
+        X = X.copy()
         new_col_list = []
-        for col in Xout.columns:
+        for col in X.columns:
             if self.get_year:
                 new_col = col + self.delim + 'year'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.year
+                X[new_col] = self._to_datetime(X[col]).dt.year
                 new_col_list.append(new_col)
             if self.get_month:
                 new_col = col + self.delim + 'month'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.month
+                X[new_col] = self._to_datetime(X[col]).dt.month
                 new_col_list.append(new_col)
             if self.get_day:
                 new_col = col + self.delim + 'day'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.day
+                X[new_col] = self._to_datetime(X[col]).dt.day
                 new_col_list.append(new_col)
             if self.get_hour:
                 new_col = col + self.delim + 'hour'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.hour
+                X[new_col] = self._to_datetime(X[col]).dt.hour
                 new_col_list.append(new_col)
             if self.get_minute:
                 new_col = col + self.delim + 'minute'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.minute
+                X[new_col] = self._to_datetime(X[col]).dt.minute
                 new_col_list.append(new_col)
             if self.get_second:
                 new_col = col + self.delim + 'second'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.second
+                X[new_col] = self._to_datetime(X[col]).dt.second
                 new_col_list.append(new_col)
             if self.get_weekday:
                 new_col = col + self.delim + 'weekday'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.weekday
+                X[new_col] = self._to_datetime(X[col]).dt.weekday
                 new_col_list.append(new_col)
             if self.get_weekday_name:
                 new_col = col + self.delim + 'weekday_name'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.weekday_name
+                X[new_col] = self._to_datetime(X[col]).dt.weekday_name
                 new_col_list.append(new_col)
             if self.get_quarter:
                 new_col = col + self.delim + 'quarter'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.quarter
+                X[new_col] = self._to_datetime(X[col]).dt.quarter
                 new_col_list.append(new_col)
             if self.get_dayofyear:
                 new_col = col + self.delim + 'dayofyear'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.dayofyear
+                X[new_col] = self._to_datetime(X[col]).dt.dayofyear
                 new_col_list.append(new_col)
             if self.get_weekofyear:
                 new_col = col + self.delim + 'weekofyear'
-                Xout[new_col] = self._to_datetime(Xout[col]).dt.weekofyear
+                X[new_col] = self._to_datetime(X[col]).dt.weekofyear
                 new_col_list.append(new_col)
 
-        return Xout.loc[:, new_col_list]
+        return X.loc[:, new_col_list]
