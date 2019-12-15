@@ -276,3 +276,4 @@ class PandasKernelPCA(BaseEstimator, TransformerMixin):
         Xpca = self.kernelpca.transform(Xs)
         column_names = [self.prefix + '{0:03g}'.format(n) + self.suffix for n in range(Xpca.shape[1])]
         return pd.DataFrame(Xpca, index=X.index, columns=column_names)
+
