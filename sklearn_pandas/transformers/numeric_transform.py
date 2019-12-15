@@ -163,18 +163,18 @@ class MissingImputer(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
-        Xout = X.copy()
-        Xout = Xout.replace([np.inf, -np.inf], np.nan)
+        X = X.copy()
+        X = X.replace([np.inf, -np.inf], np.nan)
         new_col_list = []
-        for col in Xout.columns:
+        for col in X.columns:
             new_col = self.prefix + col + self.suffix
             if not self.indicator_only:
                 new_col_list.append(new_col)
             if self.create_indicators:
-                Xout[col + '_isna'] = Xout[col].isna()
+                X[col + '_isna'] = X[col].isna()
                 new_col_list.append(col + '_isna')
-            Xout[new_col] = Xout[col].fillna(self.impute_val[col])
-        return Xout.loc[:, new_col_list]
+            X[new_col] = X[col].fillna(self.impute_val[col])
+        return X.loc[:, new_col_list]
 
 
 class AggByGroupTransform(BaseEstimator, TransformerMixin):
@@ -215,16 +215,16 @@ class AggByGroupTransform(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = validate_dataframe(X)
-        Xout = X.copy()
+        X = X.copy()
         new_col_list = []
         for gb in self.groupby_vars:
             for metric in self.metric_vars:
                 new_col = metric + self.delim + self.agg_func + self.delim + 'by' + self.delim + gb
                 new_col_list.append(new_col)
-                #Xout[new_col] = self.agg_series[gb][metric].loc[X[gb]]
-                Xout[new_col] = [self.agg_series[gb][metric][x] for x in X[gb]]
+                #X[new_col] = self.agg_series[gb][metric].loc[X[gb]]
+                X[new_col] = [self.agg_series[gb][metric][x] for x in X[gb]]
 
-        return Xout.loc[:, new_col_list]
+        return X.loc[:, new_col_list]
 
 
 class PandasPCA(BaseEstimator, TransformerMixin):
