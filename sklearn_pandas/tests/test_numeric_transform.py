@@ -211,3 +211,60 @@ class TestPandasKernelPCA(TestCase):
         transform = PandasKernelPCA(n_components=3)
         pd.testing.assert_frame_equal(transform.fit_transform(df), expected_df)
 
+    def test_outlier(self):
+        df = pd.DataFrame({
+            'A': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, ],
+            'B': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 50000.0, ],
+        })
+        expected_df = pd.DataFrame({
+            'A': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, ],
+            'A_isoutlier': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ],
+            'B': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 7.0, ],
+            'B_isoutlier': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, ],
+        })
+        transform = PandasOutlierTrim(method='IQR', values=True, indicators=True, prefix='', suffix='')
+        out_df = transform.fit_transform(df)
+        pd.testing.assert_frame_equal(out_df, expected_df)
+
+    def test_outlier_large_range(self):
+        df = pd.DataFrame({
+            'A': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, ],
+            'B': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 50000.0, ],
+        })
+        expected_df = pd.DataFrame({
+            'A': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, ],
+            'A_isoutlier': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ],
+            'B': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 50000.0, ],
+            'B_isoutlier': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ],
+        })
+        transform = PandasOutlierTrim(method='IQR', range=1000000.0, values=True, indicators=True, prefix='', suffix='')
+        out_df = transform.fit_transform(df)
+        pd.testing.assert_frame_equal(out_df, expected_df)
+
+    def test_outlier_values_only(self):
+        df = pd.DataFrame({
+            'A': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, ],
+            'B': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 50000.0, ],
+        })
+        expected_df = pd.DataFrame({
+            'A': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, ],
+            'B': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 7.0, ],
+        })
+        transform = PandasOutlierTrim(method='IQR', values=True, indicators=False, prefix='', suffix='')
+        out_df = transform.fit_transform(df)
+        pd.testing.assert_frame_equal(out_df, expected_df)
+
+    def test_outlier_indicator_only(self):
+        df = pd.DataFrame({
+            'A': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, ],
+            'B': [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 50000.0, ],
+        })
+        expected_df = pd.DataFrame({
+            'A_isoutlier': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ],
+            'B_isoutlier': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, ],
+        })
+        transform = PandasOutlierTrim(method='IQR', values=False, indicators=True, prefix='', suffix='')
+        out_df = transform.fit_transform(df)
+        pd.testing.assert_frame_equal(out_df, expected_df)
+
+

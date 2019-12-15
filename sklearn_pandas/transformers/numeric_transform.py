@@ -277,3 +277,43 @@ class PandasKernelPCA(BaseEstimator, TransformerMixin):
         column_names = [self.prefix + '{0:03g}'.format(n) + self.suffix for n in range(Xpca.shape[1])]
         return pd.DataFrame(Xpca, index=X.index, columns=column_names)
 
+
+class PandasOutlierTrim(BaseEstimator, TransformerMixin):
+    def __init__(self, method='IQR', range=1.5, values=True, indicators=True, prefix='', suffix='',
+                 low_pct=0.25, up_pct=0.75):
+        self.method = method
+        self.range = range
+        self.values = values
+        self.indicators = indicators
+        self.low_pct = low_pct
+        self.up_pct = up_pct
+        self.prefix = prefix
+        self.suffix = suffix
+
+    def fit(self, X, y=None):
+        X = validate_dataframe(X)
+        q1 = X.quantile(self.low_pct)
+        q3 = X.quantile(self.up_pct)
+        iqr = q3 - q1
+        self.lb = q1 - self.range * iqr
+        self.ub = q3 + self.range * iqr
+        return self
+
+    def transform(self, X):
+        X = validate_dataframe(X)
+        X = X.copy()
+        new_col_list = []
+        for col in X.columns:
+            new_col = self.prefix + col + self.suffix
+            x_orig = X[col].copy()
+            if self.values:
+                X[new_col] = x_orig
+                X.loc[(X[new_col] < self.lb[col]), new_col] = self.lb[col]
+                X.loc[(X[new_col] > self.ub[col]), new_col] = self.ub[col]
+                new_col_list.append(new_col)
+            if self.indicators:
+                X[col + '_isoutlier'] = 0.0
+                X.loc[x_orig < self.lb[col], col + '_isoutlier'] = 1.0
+                X.loc[x_orig > self.ub[col], col + '_isoutlier'] = 1.0
+                new_col_list.append(col + '_isoutlier')
+        return X.loc[:, new_col_list]
