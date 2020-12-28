@@ -8,7 +8,7 @@ from sklearn.decomposition import PCA, KernelPCA
 
 class QuantileBinning(BaseEstimator, TransformerMixin):
 
-    def __init__(self, nbins=5, prefix='', suffix=''):
+    def __init__(self, nbins=5, prefix='', suffix='__qbin'):
         self.nbins = nbins
         self.prefix = prefix
         self.suffix = suffix
@@ -35,7 +35,7 @@ class QuantileBinning(BaseEstimator, TransformerMixin):
 
 class WinsorizeTransform(BaseEstimator, TransformerMixin):
 
-    def __init__(self, clip_p, prefix='', suffix=''):
+    def __init__(self, clip_p, prefix='', suffix='__wins'):
         self.clip_p = clip_p
         self.prefix = prefix
         self.suffix = suffix
@@ -60,7 +60,7 @@ class WinsorizeTransform(BaseEstimator, TransformerMixin):
 
 
 class PandasRobustScaler(BaseEstimator, TransformerMixin):
-    def __init__(self, with_centering=True, with_scaling=True, quantile_range=(25.0, 75.0), prefix='', suffix=''):
+    def __init__(self, with_centering=True, with_scaling=True, quantile_range=(25.0, 75.0), prefix='', suffix='__rbstscale'):
         self.scaler = None
         self.with_centering = with_centering
         self.with_scaling = with_scaling
@@ -70,7 +70,7 @@ class PandasRobustScaler(BaseEstimator, TransformerMixin):
         self.prefix = prefix
         self.suffix = suffix
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self.scaler = RobustScaler(with_centering=self.with_centering,
                                with_scaling=self.with_scaling, quantile_range=self.quantile_range)
@@ -79,7 +79,7 @@ class PandasRobustScaler(BaseEstimator, TransformerMixin):
         self.scale_ = pd.Series(self.scaler.scale_, index=X.columns)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         Xrs = self.scaler.transform(X)
@@ -88,7 +88,7 @@ class PandasRobustScaler(BaseEstimator, TransformerMixin):
 
 
 class PandasStandardScaler(BaseEstimator, TransformerMixin):
-    def __init__(self, copy=True, with_mean=True, with_std=True, prefix='', suffix=''):
+    def __init__(self, copy=True, with_mean=True, with_std=True, prefix='', suffix='__stdscale'):
         self.scaler = None
         self.copy = copy
         self.with_mean = with_mean
@@ -96,13 +96,13 @@ class PandasStandardScaler(BaseEstimator, TransformerMixin):
         self.prefix = prefix
         self.suffix = suffix
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self.scaler = StandardScaler(copy=self.copy, with_mean=self.with_mean, with_std=self.with_std)
         self.scaler.fit(X)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         Xrs = self.scaler.transform(X)
@@ -111,7 +111,7 @@ class PandasStandardScaler(BaseEstimator, TransformerMixin):
 
 
 class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
-    def __init__(self, feature_range=(0, 1), copy=True, prefix='', suffix=''):
+    def __init__(self, feature_range=(0, 1), copy=True, prefix='', suffix='__mmscale'):
         self.scaler = None
         self.feature_range = feature_range
         self.copy = copy
@@ -120,7 +120,7 @@ class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
         self.prefix = prefix
         self.suffix = suffix
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self.scaler = MinMaxScaler(feature_range=self.feature_range, copy=self.copy)
         self.scaler.fit(X)
@@ -128,7 +128,7 @@ class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
         self.min_ = pd.Series(self.scaler.min_, index=X.columns)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         Xrs = self.scaler.transform(X)
@@ -137,7 +137,7 @@ class PandasMinMaxScaler(BaseEstimator, TransformerMixin):
 
 
 class MissingImputer(BaseEstimator, TransformerMixin):
-    def __init__(self, method='zero', create_indicators=False, indicator_only=False, prefix='', suffix=''):
+    def __init__(self, method='zero', create_indicators=False, indicator_only=False, prefix='', suffix='__impute'):
         self.method = method
         self.create_indicators = create_indicators
         self.indicator_only = indicator_only
@@ -154,14 +154,14 @@ class MissingImputer(BaseEstimator, TransformerMixin):
         else:
             raise NotImplementedError('method {0} not implemented'.format(self.method))
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self.impute_val = {}
         for col in X.columns:
             self.impute_val[col] = np.nan_to_num(self._calc_impute_val(X.loc[:, col]))
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         X = X.replace([np.inf, -np.inf], np.nan)
@@ -196,7 +196,7 @@ class AggByGroupTransform(BaseEstimator, TransformerMixin):
         else:
             raise NotImplementedError("Did not implement {0} aggregation function".format(self.agg_func))
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self._validate_params(X)
         self.agg_series = {}
@@ -213,7 +213,7 @@ class AggByGroupTransform(BaseEstimator, TransformerMixin):
         except KeyError:
             return np.nan
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         new_col_list = []
@@ -234,7 +234,7 @@ class PandasPCA(BaseEstimator, TransformerMixin):
         self.prefix = prefix
         self.suffix = suffix
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self.scaler = StandardScaler(copy=self.copy, with_mean=True, with_std=True)
         self.scaler.fit(X)
@@ -242,7 +242,7 @@ class PandasPCA(BaseEstimator, TransformerMixin):
         self.pca.fit(self.scaler.transform(X))
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         Xs = self.scaler.transform(X)
@@ -252,7 +252,7 @@ class PandasPCA(BaseEstimator, TransformerMixin):
 
 
 class PandasKernelPCA(BaseEstimator, TransformerMixin):
-    def __init__(self, n_components=None, kernel='linear', gamma=None, degree=3, copy=True, prefix='pca_', suffix=''):
+    def __init__(self, n_components=None, kernel='linear', gamma=None, degree=3, copy=True, prefix='kpca_', suffix=''):
         self.n_components = n_components
         self.kernel = kernel
         self.gamma = gamma
@@ -261,7 +261,7 @@ class PandasKernelPCA(BaseEstimator, TransformerMixin):
         self.prefix = prefix
         self.suffix = suffix
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self.scaler = StandardScaler(copy=self.copy, with_mean=True, with_std=True)
         self.scaler.fit(X)
@@ -269,7 +269,7 @@ class PandasKernelPCA(BaseEstimator, TransformerMixin):
         self.kernelpca.fit(self.scaler.transform(X))
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         Xs = self.scaler.transform(X)
@@ -279,7 +279,7 @@ class PandasKernelPCA(BaseEstimator, TransformerMixin):
 
 
 class PandasOutlierTrim(BaseEstimator, TransformerMixin):
-    def __init__(self, method='IQR', range=1.5, values=True, indicators=True, prefix='', suffix='',
+    def __init__(self, method='IQR', range=1.5, values=True, indicators=True, prefix='', suffix='__outtrm',
                  low_pct=0.25, up_pct=0.75):
         self.method = method
         self.range = range
@@ -290,7 +290,7 @@ class PandasOutlierTrim(BaseEstimator, TransformerMixin):
         self.prefix = prefix
         self.suffix = suffix
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         q1 = X.quantile(self.low_pct)
         q3 = X.quantile(self.up_pct)
@@ -299,7 +299,7 @@ class PandasOutlierTrim(BaseEstimator, TransformerMixin):
         self.ub = q3 + self.range * iqr
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         new_col_list = []

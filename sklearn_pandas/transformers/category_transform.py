@@ -10,11 +10,11 @@ class StringImputer(BaseEstimator, TransformerMixin):
         self.value_if_empty = value_if_empty
         self.value_if_none = value_if_none
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         Xout = X.copy()
         for col in Xout.columns:
@@ -29,7 +29,7 @@ class BundleRareValues(BaseEstimator, TransformerMixin):
         self.threshold = threshold
         self.value_if_rare = value_if_rare
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self.common_categories = {}
         for col in X.columns:
@@ -38,7 +38,7 @@ class BundleRareValues(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         Xout = X.copy()
         for col in Xout.columns:
@@ -52,7 +52,7 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, delim='_'):
         self.delim = delim
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self.encodings = {}
         for col in X.columns:
@@ -60,7 +60,7 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         Xout = X.copy()
         new_col_list = []
@@ -74,7 +74,7 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
 
 
 class CategoricalAggregate(BaseEstimator, TransformerMixin):
-    def __init__(self, agg_func='mean', rank=False, prefix='', suffix=''):
+    def __init__(self, agg_func='mean', rank=False, prefix='', suffix='__avg_resp'):
         self.agg_func = agg_func
         self.rank = rank
         self.prefix = prefix
@@ -92,7 +92,7 @@ class CategoricalAggregate(BaseEstimator, TransformerMixin):
         else:
             raise NotImplementedError("Did not implement {0} aggregation function".format(self.agg_func))
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self._validate_params(X)
         self.agg_series = {}
@@ -103,7 +103,7 @@ class CategoricalAggregate(BaseEstimator, TransformerMixin):
                 self.agg_series[col] = y.groupby(X[col]).agg({self._agg_func}).iloc[:,0]
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         Xout = X.copy()
         new_col_list = []
@@ -127,7 +127,7 @@ class IntegerToString(BaseEstimator, TransformerMixin):
     def _infer_dtype(x):
         return pd.api.types.infer_dtype(x, skipna=True)
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self._validate_params(X)
         self.hidden_categorical_columns = []
@@ -139,7 +139,7 @@ class IntegerToString(BaseEstimator, TransformerMixin):
                     self.hidden_categorical_columns.append(col)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         for col in self.hidden_categorical_columns:

@@ -23,7 +23,7 @@ class ColumnSelector(BaseEstimator, TransformerMixin):
         validate_columns_exist(X, self.columns)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         validate_columns_exist(X, self.columns)
@@ -45,7 +45,7 @@ class ColumnSearchSelect(BaseEstimator, TransformerMixin):
         X = validate_dataframe(X)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         num_columns = len(X.columns)
@@ -91,7 +91,7 @@ class DropColumns(BaseEstimator, TransformerMixin):
         self._validate_params(X)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
@@ -112,7 +112,7 @@ class UniqueValueFilter(BaseEstimator, TransformerMixin):
         self.drop_columns = [col for col in X.columns if X[col].nunique() < self.min_unique_values]
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
@@ -151,7 +151,7 @@ class ColumnByType(BaseEstimator, TransformerMixin):
         self.selected_columns = X.columns[X.apply(self._infer_dtype).isin(self.selected_var_types)]
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         return X.loc[:, self.selected_columns]
@@ -166,7 +166,7 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
     def _validate_params(self, X):
         pass
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self._validate_params(X)
         corr_matrix = X.corr(self.method).abs()
@@ -174,7 +174,7 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
         self.drop_columns = [column for column in upper.columns if any(upper[column] > self.threshold)]
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         selected_columns = [col for col in X.columns if col not in self.drop_columns]
@@ -191,7 +191,7 @@ class PandasSelectKBest(BaseEstimator, TransformerMixin):
     def _validate_params(self, X):
         pass
 
-    def fit(self, X, y):
+    def fit(self, X, y, **fitparams):
         X = validate_dataframe(X)
         self._validate_params(X)
         var_performance = self.score_func(X, y)
@@ -200,7 +200,7 @@ class PandasSelectKBest(BaseEstimator, TransformerMixin):
         self.k_best_columns = var_performance.sort_values(ascending=self.ascending).head(self.k).index
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         selected_columns = [col for col in X.columns if col in self.k_best_columns]

@@ -38,14 +38,14 @@ class PandasSelectKBest(BaseEstimator, TransformerMixin):
             corr = -1.0 * X.apply(func=lambda x, y: kendalltau(x, y)[0], axis=0, args=(y,)).abs()
             return corr.rank(method='min')
 
-    def fit(self, X, y):
+    def fit(self, X, y, **fitparams):
         X = validate_dataframe(X)
         self._check_params(X, y)
         self.rank = self.calc_rank(X, y)
         self.selected_columns = self.rank[self.rank <= self._k].index.tolist()
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         return X.loc[:, self.selected_columns]
@@ -79,14 +79,14 @@ class PandasSelectThreshold(BaseEstimator, TransformerMixin):
             corr = -1.0 * X.apply(func=lambda x, y: kendalltau(x, y)[0], axis=0, args=(y,)).abs()
             return corr / corr.sum()
 
-    def fit(self, X, y):
+    def fit(self, X, y, **fitparams):
         X = validate_dataframe(X)
         self._check_params(X, y)
         self.imp = self.calc_imp(X, y)
         self.selected_columns = self.imp[self.imp <= self._pct].index.tolist()
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         return X.loc[:, self.selected_columns]

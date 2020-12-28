@@ -13,13 +13,13 @@ class DataFrameFixColumnOrder(BaseEstimator, TransformerMixin):
     def _validate_params(self):
         pass
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self._validate_params()
         self.columns = X.columns
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         return X.loc[:, self.columns]
@@ -81,12 +81,12 @@ class DataFrameFunctionApply(BaseEstimator, TransformerMixin):
         if self.func is None:
             self.func = lambda x: x
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self._validate_params()
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         new_col_list = []
@@ -105,11 +105,11 @@ class TypeCast(BaseEstimator, TransformerMixin):
     def __init__(self, dtype=float):
         self.dtype = dtype
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         return X.astype(self.dtype)
@@ -121,10 +121,10 @@ class PrintToScreen(BaseEstimator, TransformerMixin):
         self.max_rows = max_rows
         self.max_cols = max_cols
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         print(X.to_string(max_rows=self.max_rows, max_cols=self.max_cols))
@@ -137,11 +137,11 @@ class CreateDummyColumn(BaseEstimator, TransformerMixin):
         self.value = value
         self.column_name = column_name
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         X[self.column_name] = self.value
@@ -160,7 +160,7 @@ class InferType(BaseEstimator, TransformerMixin):
     def _infer_dtype(x):
         return pd.api.types.infer_dtype(x, skipna=True)
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self._validate_params(X)
         self.types = {}
@@ -168,7 +168,7 @@ class InferType(BaseEstimator, TransformerMixin):
             self.types[col] = self._infer_dtype(X[col])
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         return X.copy()
@@ -220,7 +220,7 @@ class ProfileDataFrame(BaseEstimator, TransformerMixin):
             'num_unique': len(np.unique(x))
         }
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         self._validate_params(X)
         self.types = {}
@@ -228,7 +228,7 @@ class ProfileDataFrame(BaseEstimator, TransformerMixin):
             self.types[col] = self._infer_dtype(X[col])
         return self
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         return X.copy()

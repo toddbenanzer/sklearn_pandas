@@ -14,7 +14,7 @@ class DateTransform(BaseEstimator, TransformerMixin):
         self.format = format
         self.exact = exact
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         return self
 
@@ -23,7 +23,7 @@ class DateTransform(BaseEstimator, TransformerMixin):
                               box=True, format=self.format, exact=self.exact, unit=None, infer_datetime_format=False,
                               origin='unix', cache=False)
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         # assumes X is a DataFrame
@@ -55,7 +55,7 @@ class ExtractDatePart(BaseEstimator, TransformerMixin):
         self.format = format
         self.exact = exact
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         return self
 
@@ -64,7 +64,7 @@ class ExtractDatePart(BaseEstimator, TransformerMixin):
                               box=True, format=self.format, exact=self.exact, unit=None, infer_datetime_format=False,
                               origin='unix', cache=False)
 
-    def transform(self, X):
+    def transform(self, X, **transformparams):
         X = validate_dataframe(X)
         X = X.copy()
         new_col_list = []

@@ -9,7 +9,7 @@ class DropNARowFilter(BaseEstimator, TransformerMixin):
     def __init__(self, excluded_columns=None):
         self.excluded_columns = excluded_columns or []
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
         return self
 
