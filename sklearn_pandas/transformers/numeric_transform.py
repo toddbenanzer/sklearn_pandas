@@ -170,7 +170,7 @@ class MissingImputer(BaseEstimator, TransformerMixin):
             new_col = self.prefix + col + self.suffix
             if not self.indicator_only:
                 new_col_list.append(new_col)
-            if self.create_indicators:
+            if self.create_indicators or self.indicator_only:
                 X[col + '_isna'] = X[col].isna()
                 new_col_list.append(col + '_isna')
             X[new_col] = X[col].fillna(self.impute_val[col])
@@ -316,4 +316,169 @@ class PandasOutlierTrim(BaseEstimator, TransformerMixin):
                 X.loc[x_orig < self.lb[col], col + '_isoutlier'] = 1.0
                 X.loc[x_orig > self.ub[col], col + '_isoutlier'] = 1.0
                 new_col_list.append(col + '_isoutlier')
+        return X.loc[:, new_col_list]
+
+
+class EntropyBinning(BaseEstimator, TransformerMixin):
+    def __init__(
+        self, method='entropy', min_gain=0.01, max_bins=10, noise_penalty=0.0, prefix='', suffix='__binned',
+        nhist=50, min_pop=0.10, max_cuts=10):
+        self.method = method
+        self.min_gain = min_gain
+        self.max_bins = max_bins
+        self.noise_penalty = noise_penalty
+        self.prefix = prefix
+        self.suffix = suffix
+        self.nhist = nhist
+        self.min_pop = min_pop
+        self.max_cuts = max_cuts
+
+    def _round_cuts(self, cuts):
+
+        def string_round(x, n=0):
+            template_str = '{0:.' + str(n) + 'f}'
+            return template_str.format(x)
+
+        n = len(cuts)
+        for r in range(20):
+            rounded_cuts = np.unique(np.round(cuts, r))
+            if len(rounded_cuts) == n:
+                return [string_round(x, n=r) for x in cuts]
+
+        return [string_round(x, n=20) for x in cuts]
+
+    def _create_bin_labels(self, cuts):
+        rounded_cuts = self._round_cuts(cuts)
+        return ['{0}-{1}'.format(left, right) for left, right in zip(rounded_cuts[:-1], rounded_cuts[1:])]
+
+    def _apply_bins(self, x, cuts):
+        x_out = pd.cut(x, cuts, right=True, labels=self._create_bin_labels(cuts), retbins=False, include_lowest=False, duplicates='raise')
+        x_out = x_out.astype(str)
+        x_out = np.where(x_out == 'nan', 'Unknown', x_out)
+        return x_out
+
+    def _create_contingency_table(self, x, y, w):
+        _df = pd.DataFrame({
+            'x': x.values, 'y': y.values, 'w': w.values,
+            }, index=[list(range(len(x)))])
+        _df['q'] = pd.qcut(_df['x'], self.nhist, duplicates='drop').astype(str)
+
+        def gb_wt_avg(x):
+            return np.average(x, weights = _df.loc[x.index, 'w'])
+
+        base_df = _df \
+            .groupby('q', as_index=False) \
+            .agg({'x': gb_wt_avg, 'y': gb_wt_avg, 'w': np.nansum})
+
+        nan_mask = np.isnan(x)
+        if sum(nan_mask) == 0:
+            nan_df = pd.DataFrame({
+                'q': ['Missing'], 
+                'x': [np.nan], 
+                'y': [0.0], 
+                'w': [0.0]
+            })
+        else:
+            nan_df = pd.DataFrame({
+                'q': ['Missing'], 
+                'x': [np.nan], 
+                'y': [np.average(y[nan_mask], weights=w[nan_mask])], 
+                'w': [np.nansum(w[nan_mask])]
+            })
+        
+        contingency_df = pd.concat([
+                nan_df,
+                base_df
+            ]).set_index('q')
+
+        contingency_df['w'] = contingency_df['w'].clip(lower=0.0001, upper=None)
+        
+        return contingency_df
+
+    def _eval_cuts(self, contingency, cuts):
+        binned_df = contingency.copy()
+        binned_df['xb'] = self._apply_bins(binned_df['x'], cuts=cuts)
+
+        def wtd_cov(x):
+            average = np.average(x, weights = binned_df.loc[x.index, 'w'])
+            variance = np.average((x-average)**2, weights = binned_df.loc[x.index, 'w'])
+            return np.divide(np.sqrt(variance), average)
+            
+        def wtd_var(x):
+            average = np.average(x, weights = binned_df.loc[x.index, 'w'])
+            variance = np.average((x-average)**2, weights = binned_df.loc[x.index, 'w'])
+            return np.sqrt(variance)
+        
+        def _entropy(p):
+            p = min(0.99999, p)
+            p = max(0.00001, p)
+            return -p * np.log(p)
+
+        def wtd_entropy(x):
+            average = np.average(x, weights = binned_df.loc[x.index, 'w'])
+            return _entropy(average)
+
+        if self.method == 'entropy':
+            eval_func = wtd_entropy
+        elif self.method == 'variance':
+            eval_func = wtd_var
+        else:
+            raise NotImplementedError('Error {0} is not recognized'.format(self.method))
+
+        bgb_df = binned_df.groupby('xb').agg({'y': eval_func, 'w': np.sum}).fillna(0)
+
+        avg_std = np.average(bgb_df['y'], weights=bgb_df['w'])
+
+        wts = bgb_df.loc[bgb_df.index != 'Unknown', 'w']
+        min_population = np.min(wts / np.sum(wts))
+
+        return avg_std, min_population
+
+    def _calc_optimal_cuts(self, contingency):
+        all_cuts = contingency['x'].dropna().tolist()[1:-1]
+
+        # initialize optimization
+        best_cuts = [-np.inf, np.inf]
+        best_eval, best_min_pop = self._eval_cuts(contingency, cuts=best_cuts)
+        curr_best_cuts = best_cuts[:]
+        curr_best_eval = best_eval
+        # find optimal cuts
+        for iter in range(self.max_cuts):
+            next_best_cuts = curr_best_cuts[:]
+            next_best_eval = curr_best_eval
+            for cut in all_cuts:
+                new_cuts = list(np.sort(np.unique(curr_best_cuts + [cut])))
+                new_eval, new_min_pop = self._eval_cuts(contingency, cuts=new_cuts)
+                if new_eval < next_best_eval and new_min_pop >= self.min_pop:
+                    next_best_cuts = new_cuts[:]
+                    next_best_eval = new_eval
+                    eval_increase = next_best_eval - curr_best_eval
+            # update current
+            curr_best_cuts = next_best_cuts[:]
+            curr_best_eval = next_best_eval
+        return list(curr_best_cuts)
+
+    def fit(self, X, y, **fitparams):
+        X = validate_dataframe(X)
+        self.cuts = {}
+        if 'sample_weight' in fitparams:
+            w = fitparams['sample_weight']
+        else:
+            w = pd.Series(np.ones(len(y)))
+        for col in X.columns:
+            _cont_df = self._create_contingency_table(X[col], y, w)
+            cuts = self._calc_optimal_cuts(_cont_df)
+            self.cuts[col] = cuts[:]
+        return self
+
+    def transform(self, X, **transformparams):
+        X = validate_dataframe(X)
+        X = X.copy()
+        new_col_list = []
+        for col in X.columns:
+            new_col = self.prefix + col + self.suffix
+            x_orig = X[col].copy()
+            X[new_col] = self._apply_bins(x_orig, self.cuts[col])
+            new_col_list.append(new_col)
+
         return X.loc[:, new_col_list]
