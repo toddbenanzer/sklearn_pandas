@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.stats import yeojohnson
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.preprocessing import RobustScaler, StandardScaler, MinMaxScaler
 from sklearn_pandas.util import retain_sign, validate_dataframe
@@ -481,4 +482,32 @@ class EntropyBinning(BaseEstimator, TransformerMixin):
             X[new_col] = self._apply_bins(x_orig, self.cuts[col])
             new_col_list.append(new_col)
 
+        return X.loc[:, new_col_list]
+
+
+class YeoJohnsonNormalization(BaseEstimator, TransformerMixin):
+    
+    def __init__(self, nbins=5, prefix='', suffix='__yjnorm'):
+        self.nbins = nbins
+        self.prefix = prefix
+        self.suffix = suffix
+
+    def fit(self, X, y=None, **fitparams):
+        X = validate_dataframe(X)
+        self.lams = {}
+        for col in X.columns:
+            Xcol_float = X[col].astype(float)
+            _, lam = yeojohnson(Xcol_float)
+            self.lams[col] = lam
+        return self
+
+    def transform(self, X, **transformparams):
+        X = validate_dataframe(X)
+        X = X.copy()
+        new_col_list = []
+        for col in X.columns:
+            new_col = self.prefix + col + self.suffix
+            new_col_list.append(new_col)
+            Xcol_float = X[col].astype(float)
+            X[new_col] = yeojohnson(Xcol_float, lmbda=self.lams[col])
         return X.loc[:, new_col_list]

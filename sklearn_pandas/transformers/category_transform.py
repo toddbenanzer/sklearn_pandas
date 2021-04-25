@@ -80,21 +80,43 @@ class CategoricalAggregate(BaseEstimator, TransformerMixin):
         self.prefix = prefix
         self.suffix = suffix
 
-    def _validate_params(self, X):
-        if self.agg_func == 'mean':
-            self._agg_func = np.nanmean
-        elif self.agg_func == 'min':
-            self._agg_func = np.nanmin
-        elif self.agg_func == 'max':
-            self._agg_func = np.nanmax
-        elif self.agg_func == 'median':
-            self._agg_func = np.nanmedian
-        else:
-            raise NotImplementedError("Did not implement {0} aggregation function".format(self.agg_func))
 
-    def fit(self, X, y=None, **fitparams):
+    def fit(self, X, y, **fitparams):
         X = validate_dataframe(X)
-        self._validate_params(X)
+
+        if 'sample_weight' in fitparams:
+            w = fitparams['sample_weight']
+        else:
+            w = pd.Series(np.ones(len(y)))
+
+        def weighted_mean(x): 
+            return np.average(x, weights=w.loc[x.index])
+
+        def _weighted_median(x, weights):
+            x_ = x.copy()
+            weights_ = weights.copy()
+            _i_sorted = x_.index[np.argsort(x_)]
+            x_sorted = x_[_i_sorted]
+            w_sorted = weights_[_i_sorted]
+            cumsum = w_sorted.cumsum() / w_sorted.sum()
+            print('cumsum', cumsum)
+            print('x_sorted', cumsum)
+            return np.interp(0.5, cumsum, x_sorted)
+
+        def weighted_median(x): 
+            return _weighted_median(x, weights=w.loc[x.index])
+
+        if self.agg_func == 'mean':
+            self._agg_func = weighted_mean
+        elif self.agg_func == 'median':
+            self._agg_func = weighted_median
+        elif self.agg_func == 'min':
+            self._agg_func = np.min
+        elif self.agg_func == 'max':
+            self._agg_func = np.min
+        else:
+            raise NotImplementedError('Aggreagation Function {0} is not implemented'.format(self.agg_func))
+
         self.agg_series = {}
         for col in X.columns:
             if self.rank:
@@ -145,3 +167,4 @@ class IntegerToString(BaseEstimator, TransformerMixin):
         for col in self.hidden_categorical_columns:
             X[col] = X[col].astype(str)
         return X
+

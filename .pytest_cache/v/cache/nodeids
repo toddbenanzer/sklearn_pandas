@@ -84,6 +84,8 @@
   "sklearn_pandas/tests/test_numeric_transform.py::test_EntropyBinning_apply_cuts1",
   "sklearn_pandas/tests/test_numeric_transform.py::test_EntropyBinning_apply_cuts3",
   "sklearn_pandas/tests/test_numeric_transform.py::test_EntropyBinning_apply_cuts4",
+  "sklearn_pandas/tests/test_numeric_transform.py::test_YeoJohnsonNormalization_datatypes",
+  "sklearn_pandas/tests/test_numeric_transform.py::test_YeoJohnsonNormalization_missing",
   "sklearn_pandas/tests/test_predictor_eval.py::test_linear_model_build_numeric_model_pipeline",
   "sklearn_pandas/tests/test_predictor_eval.py::test_high_order_model_build_numeric_model_pipeline",
   "sklearn_pandas/tests/test_predictor_eval.py::test_zero_order_model_build_numeric_model_pipeline",

@@ -346,3 +346,23 @@ def test_EntropyBinning_apply_cuts4():
         expected = np.array(expected)
         actual = eb._apply_bins(x, cuts)
         assert np.array_equal(expected, actual)
+
+
+def test_YeoJohnsonNormalization_datatypes():
+    yj = YeoJohnsonNormalization()
+    df = pd.DataFrame({
+        'x1': [1.0, 2.0, 3.0, 4.0, 5.0],
+        'x2': [1, 2, 3, 4, 5],
+        'x3': [-1, -2, -3, -4, -5],
+        'x4': [-1, -1, -1, -1, -1],
+    })
+    Xt = yj.fit_transform(df)
+
+
+def test_YeoJohnsonNormalization_missing():
+    yj = YeoJohnsonNormalization()
+    df = pd.DataFrame({
+        'x1': [1.0, np.nan, 3.0, 4.0, 5.0],
+    })
+    Xt = yj.fit_transform(df)
+    
