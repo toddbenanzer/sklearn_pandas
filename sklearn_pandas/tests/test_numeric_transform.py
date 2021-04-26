@@ -6,12 +6,12 @@ def test_continuous_input_QuantileBinning():
     X = pd.DataFrame({'A': np.linspace(0, 1, 100000)})
     qb = QuantileBinning(nbins=10)
     df_out = qb.fit_transform(X)
-    assert '(-inf, 0.1]' == str(df_out.loc[0, 'A'])
+    assert '(-inf, 0.1]' == str(df_out.loc[0, 'A__qbin'])
 
     X = pd.DataFrame({'A': np.linspace(0, 1, 100000)})
     qb = QuantileBinning(nbins=5)
     df_out = qb.fit_transform(X)
-    assert '(-inf, 0.2]' == str(df_out.loc[0, 'A'])
+    assert '(-inf, 0.2]' == str(df_out.loc[0, 'A__qbin'])
 
 
 def test_repeated_value_QuantileBinning():
@@ -203,9 +203,9 @@ def test_basic_PandasKernelPCA():
         'E': [1.0, 7.0, 3.0, 4.0, 5.0, 5.0, 7.0, 1.0, 9.0, 10.0, ],
     })
     expected_df = pd.DataFrame({
-        'kpca_000': [-3.1672583539488492, -1.2494056424113635, -1.4659163208430037, -0.1914075343243975,
-                    0.2354257122628417, -1.6639787432312583, 1.9367677453686871, 2.364003756364218,
-                    0.7259610294066303, 2.4758083513564952],
+        'kpca_000': [3.1672583539488492, 1.2494056424113635, 1.4659163208430037, 0.1914075343243975,
+                    -0.2354257122628417, 1.6639787432312583, -1.9367677453686871, -2.364003756364218,
+                    -0.7259610294066303, -2.4758083513564952],
     })
     transform = PandasKernelPCA(n_components=1)
     pd.testing.assert_frame_equal(transform.fit_transform(df), expected_df)
@@ -222,10 +222,10 @@ def test_more_variance_PandasKernelPCA():
     expected_df = pd.DataFrame({
         'kpca_000': [3.1438279113038132, -0.20305060587275298, 0.36458581428196135, -0.890706836973131, -2.4146562827398905],
         'kpca_001': [-0.3949178565788713, 2.068661729663432, -0.431001810624807, -0.7756562977890109, -0.4670857646707431],
-        'kpca_002': [0.18724656295264966, -0.17799389583166125, 0.5123313912218616, -1.359000277833924, 0.8374162194910738],
+        'kpca_002': [-0.18724656295264966, 0.17799389583166125, -0.5123313912218616, 1.359000277833924, -0.8374162194910738],
     })
     transform = PandasKernelPCA(n_components=3)
-    pd.testing.assert_frame_equal(transform.fit_transform(df), expected_df)
+    pd.testing.assert_frame_equal(transform.fit_transform(df).round(3), expected_df.round(3))
 
 
 def test_outlier_OutlierTrim():
@@ -366,3 +366,15 @@ def test_YeoJohnsonNormalization_missing():
     })
     Xt = yj.fit_transform(df)
     
+
+def test_entropybinning_classification():
+    df = pd.DataFrame({
+        'x1': np.random.randint(0, 100, size=100),
+        'x2': np.random.standard_normal(size=100),
+        'y': np.random.randint(0, 1, size=100),
+    })
+    X = df[['x1', 'x2']]
+    y = df['y']
+    eb = EntropyBinning(method='variance')
+    eb.fit(X, y)
+    Xt = eb.transform(X)

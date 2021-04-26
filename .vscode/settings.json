@@ -1,10 +1,11 @@
 {
-    "python.pythonPath": "C:\\ProgramData\\Anaconda201903\\python.exe",
+    "python.pythonPath": "c:\\ProgramData\\Anaconda201903\\python.exe",
     "python.testing.pytestArgs": [
         "sklearn_pandas"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,
     "python.testing.pytestEnabled": true,
-    "jupyter.jupyterServerType": "local"
+    "jupyter.jupyterServerType": "local",
+    "restructuredtext.confPath": ""
 }

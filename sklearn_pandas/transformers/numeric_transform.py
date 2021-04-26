@@ -354,8 +354,8 @@ class EntropyBinning(BaseEstimator, TransformerMixin):
 
     def _apply_bins(self, x, cuts):
         x_out = pd.cut(x, cuts, right=True, labels=self._create_bin_labels(cuts), retbins=False, include_lowest=False, duplicates='raise')
+        x_out = np.where(pd.isnull(x_out), 'Unknown', x_out.astype(str))
         x_out = x_out.astype(str)
-        x_out = np.where(x_out == 'nan', 'Unknown', x_out)
         return x_out
 
     def _create_contingency_table(self, x, y, w):

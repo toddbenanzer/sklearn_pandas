@@ -33,7 +33,7 @@ class BundleRareValues(BaseEstimator, TransformerMixin):
         X = validate_dataframe(X)
         self.common_categories = {}
         for col in X.columns:
-            counts = pd.Series(X[col].value_counts() / np.float(len(X)))
+            counts = pd.Series(X[col].value_counts() / float(len(X)))
             self.common_categories[col] = list(counts[counts >= self.threshold].index)
 
         return self
@@ -113,7 +113,7 @@ class CategoricalAggregate(BaseEstimator, TransformerMixin):
         elif self.agg_func == 'min':
             self._agg_func = np.min
         elif self.agg_func == 'max':
-            self._agg_func = np.min
+            self._agg_func = np.max
         else:
             raise NotImplementedError('Aggreagation Function {0} is not implemented'.format(self.agg_func))
 

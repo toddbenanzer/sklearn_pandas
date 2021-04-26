@@ -170,7 +170,7 @@ class CorrelationFilter(BaseEstimator, TransformerMixin):
         X = validate_dataframe(X)
         self._validate_params(X)
         corr_matrix = X.corr(self.method).abs()
-        upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
+        upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
         self.drop_columns = [column for column in upper.columns if any(upper[column] > self.threshold)]
         return self
 

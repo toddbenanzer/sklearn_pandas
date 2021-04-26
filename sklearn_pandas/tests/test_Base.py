@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, date
 from sklearn.dummy import DummyRegressor
-from sklearn_pandas.transformers.base import *
+from sklearn_pandas import transformers
+from sklearn_pandas.transformers.base import DataFrameModelTransformer, DataFrameFixColumnOrder, DataFrameFunctionApply, InferType
 
 
 def test_transform_DataFrameModelTransformer():

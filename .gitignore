@@ -1,5 +1,7 @@
-venv/
-.cache/
-.idea/
-__pycache__/
+venv
+.cache
+.idea
+__pycache__
+.pytest_cache
+.vscode
 

@@ -201,6 +201,6 @@ def test_string_scenario2_composite_model_pipeline():
         'y': [0, 1, 2, 1, 0, 1, 2, 1, 0, 1],
     })
     expected_series = pd.Series(
-        [0.0, 0.00874635568513138, 0.8299319727891157], index=['A', 'B', 'C'])
+        [0.0, -0.1607142857142856, 0.8299319727891157], index=['A', 'B', 'C'])
     score_func = _model_score_function_factory_composite(order=3)
-    pd.testing.assert_series_equal(score_func(X, y), expected_series)
+    pd.testing.assert_series_equal(score_func(X, y).round(3), expected_series.round(3))

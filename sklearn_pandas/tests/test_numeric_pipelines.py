@@ -23,42 +23,42 @@ def test_identity_pipeline():
     X, y = get_standard_X_y()
     pipeline = identity_pipeline()
     pipeline_performance = pipeline_eval(pipeline, X, y)
-    assert pipeline_performance == 0.5568276244114114
+    assert pipeline_performance == pytest.approx(0.5568276244114114)
 
 
 def test_quantile_pipeline():
     X, y = get_standard_X_y()
     pipeline = quantile_pipeline(nbins=2)
     pipeline_performance = pipeline_eval(pipeline, X, y)
-    assert pipeline_performance == 0.5423340961098402
+    assert pipeline_performance == pytest.approx(0.5423340961098402)
 
 
 def test_winsorize_pipeline():
     X, y = get_standard_X_y()
     pipeline = winsorize_pipeline(clip_p=0.40)
     pipeline_performance = pipeline_eval(pipeline, X, y)
-    assert pipeline_performance == 0.27734375
+    assert pipeline_performance == pytest.approx(0.27734375)
 
 
 def test_power_pipeline():
     X, y = get_standard_X_y()
     pipeline = power_pipeline(power_list=(1, 2, ))
     pipeline_performance = pipeline_eval(pipeline, X, y)
-    assert pipeline_performance == 0.5699781460571843
+    assert pipeline_performance == pytest.approx(0.5699781460571843)
 
 
 def test_power_pipeline2():
     X, y = get_standard_X_y()
     pipeline = power_pipeline(power_list=(1, 0.5, ))
     pipeline_performance = pipeline_eval(pipeline, X, y)
-    assert pipeline_performance == 0.5604282125997029
+    assert pipeline_performance == pytest.approx(0.5604282125997029)
 
 
 def test_function_list_pipeline():
     X, y = get_standard_X_y()
     pipeline = function_list_pipeline()
     pipeline_performance = pipeline_eval(pipeline, X, y)
-    assert pipeline_performance == 0.5568276244114114
+    assert pipeline_performance == pytest.approx(0.5568276244114114)
 
 
 def test_function_list_pipeline2():
@@ -66,7 +66,7 @@ def test_function_list_pipeline2():
     pipeline = function_list_pipeline(function_list=(
         identity, np.log1p, recip1p, np.sign, np.abs, ))
     pipeline_performance = pipeline_eval(pipeline, X, y)
-    assert pipeline_performance == 0.6697943743393496
+    assert pipeline_performance == pytest.approx(0.6697943743393496)
 
 
 def test_eval_metric_list():
@@ -80,4 +80,4 @@ def test_eval_metric_list():
             identity, np.log1p, recip1p, np.sign, np.abs, ))
         pipeline_performance = pipeline_eval(
             pipeline, X, y, base_model=LinearRegression(), eval_func=eval_func)
-        assert pipeline_performance == eval_result
+        assert pipeline_performance == pytest.approx(eval_result)

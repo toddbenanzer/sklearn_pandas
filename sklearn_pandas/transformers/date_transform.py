@@ -20,7 +20,7 @@ class DateTransform(BaseEstimator, TransformerMixin):
 
     def _to_datetime(self, x):
         return pd.to_datetime(x, errors=self.errors, dayfirst=self.dayfirst, yearfirst=self.yearfirst, utc=self.utc,
-                              box=True, format=self.format, exact=self.exact, unit=None, infer_datetime_format=False,
+                              format=self.format, exact=self.exact, unit=None, infer_datetime_format=False,
                               origin='unix', cache=False)
 
     def transform(self, X, **transformparams):
@@ -61,7 +61,7 @@ class ExtractDatePart(BaseEstimator, TransformerMixin):
 
     def _to_datetime(self, x):
         return pd.to_datetime(x, errors=self.errors, dayfirst=self.dayfirst, yearfirst=self.yearfirst, utc=self.utc,
-                              box=True, format=self.format, exact=self.exact, unit=None, infer_datetime_format=False,
+                              format=self.format, exact=self.exact, unit=None, infer_datetime_format=False,
                               origin='unix', cache=False)
 
     def transform(self, X, **transformparams):
@@ -99,7 +99,8 @@ class ExtractDatePart(BaseEstimator, TransformerMixin):
                 new_col_list.append(new_col)
             if self.get_weekday_name:
                 new_col = col + self.delim + 'weekday_name'
-                X[new_col] = self._to_datetime(X[col]).dt.weekday_name
+                #X[new_col] = self._to_datetime(X[col]).dt.weekday_name
+                X[new_col] = self._to_datetime(X[col]).dt.day_name()
                 new_col_list.append(new_col)
             if self.get_quarter:
                 new_col = col + self.delim + 'quarter'
