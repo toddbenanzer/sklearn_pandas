@@ -44,6 +44,21 @@ def test_dual_value_replace_BundleRareValues():
     pd.testing.assert_frame_equal(transform.fit_transform(df), df_expected)
 
 
+
+def test_dual_value_replace_BundleRareValues_weighted():
+    df = pd.DataFrame({
+        'A': ['a'] * 20 + ['b'] * 1 + ['c'] * 1,
+        'B': ['c'] * 20 + ['a'] * 1 + ['c'] * 1,
+    })
+    weights = np.array([1.0] * 20 + [1.0] * 1 + [5000.0] * 1)
+    df_expected = pd.DataFrame({
+        'A': ['Other'] * 20 + ['Other'] * 1 + ['c'] * 1,
+        'B': ['c'] * 20 + ['Other'] * 1 + ['c'] * 1,
+    })
+    transform = BundleRareValues()
+    pd.testing.assert_frame_equal(transform.fit_transform(df, sample_weight=weights), df_expected)
+
+
 def test_simple_case_CategoricalEncoder():
     df = pd.DataFrame({
         'A': ['a', 'a', 'a', 'b', 'a', ]

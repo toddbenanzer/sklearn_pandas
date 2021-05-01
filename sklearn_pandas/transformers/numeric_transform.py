@@ -511,3 +511,5 @@ class YeoJohnsonNormalization(BaseEstimator, TransformerMixin):
             Xcol_float = X[col].astype(float)
             X[new_col] = yeojohnson(Xcol_float, lmbda=self.lams[col])
         return X.loc[:, new_col_list]
+
+

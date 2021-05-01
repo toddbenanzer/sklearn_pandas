@@ -31,9 +31,15 @@ class BundleRareValues(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
+        if 'sample_weight' in fitparams:
+            w = pd.Series(fitparams['sample_weight'])
+        else:
+            w = pd.Series(np.ones(len(y)))
+        
         self.common_categories = {}
         for col in X.columns:
-            counts = pd.Series(X[col].value_counts() / float(len(X)))
+            #counts = pd.Series(X[col].value_counts() / float(len(X)))
+            counts = w.groupby(X[col]).agg('sum') / w.sum()
             self.common_categories[col] = list(counts[counts >= self.threshold].index)
 
         return self
