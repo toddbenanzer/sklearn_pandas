@@ -11,14 +11,28 @@ def weighted_percentile(x, q=0.5, w=None):
     if w is None:
         w = np.ones(len(x))
     is_valid = np.isfinite(x) & np.isfinite(w)
-    x_clean = x[is_valid]
-    w_clean = w[is_valid]
+    x_clean = np.array(x[is_valid])
+    w_clean = np.array(w[is_valid])
+    if len(w_clean) == 0 or np.sum(w_clean) == 0:
+        return 0
     x_sorted = x_clean[np.argsort(x_clean)]
     w_sorted = w_clean[np.argsort(w_clean)]
     cumpct = w_sorted.cumsum() / w_sorted.sum()
     cumpct = np.append([0.0], cumpct)
     midpts = (cumpct[:-1] + cumpct[1:]) / 2.0
     return np.interp(q, midpts, x_sorted)
+
+
+def weighted_mean(x, w=None):
+    if w is None:
+        w = np.ones(len(x))
+    is_valid = np.isfinite(x) & np.isfinite(w)
+    x_clean = np.array(x[is_valid])
+    w_clean = np.array(w[is_valid])
+    if len(w_clean) == 0 or np.sum(w_clean) == 0:
+        return 0
+    return np.average(x_clean, weights=w_clean)
+
 
 
 class QuantileBinning(BaseEstimator, TransformerMixin):
@@ -171,21 +185,25 @@ class MissingImputer(BaseEstimator, TransformerMixin):
         self.prefix = prefix
         self.suffix = suffix
 
-    def _calc_impute_val(self, x):
+    def _calc_impute_val(self, x, w):
         if self.method == 'zero':
             return 0
         elif self.method == 'mean':
-            return np.nanmean(x.replace([np.inf, -np.inf], np.nan))
+            return weighted_mean(x.replace([np.inf, -np.inf], np.nan), w=w)
         elif self.method == 'median':
-            return np.nanmedian(x.replace([np.inf, -np.inf], np.nan))
+            return weighted_percentile(x.replace([np.inf, -np.inf], np.nan), q=0.5, w=w)
         else:
             raise NotImplementedError('method {0} not implemented'.format(self.method))
 
     def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
+        if 'sample_weight' in fitparams:
+            w = fitparams['sample_weight']
+        else:
+            w = pd.Series(np.ones(X.shape[0]))
         self.impute_val = {}
         for col in X.columns:
-            self.impute_val[col] = np.nan_to_num(self._calc_impute_val(X.loc[:, col]))
+            self.impute_val[col] = np.nan_to_num(self._calc_impute_val(X.loc[:, col], w))
         return self
 
     def transform(self, X, **transformparams):
@@ -319,12 +337,20 @@ class PandasOutlierTrim(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
-        q1 = X.quantile(self.low_pct)
-        q3 = X.quantile(self.up_pct)
-        iqr = q3 - q1
-        self.lb = q1 - self.range * iqr
-        self.ub = q3 + self.range * iqr
+        if 'sample_weight' in fitparams:
+            w = fitparams['sample_weight']
+        else:
+            w = pd.Series(np.ones(X.shape[0]))
+        self.lb = {}
+        self.ub = {}
+        for col in X.columns:
+            q1 = weighted_percentile(X.loc[:, col], q=self.low_pct, w=w)
+            q3 = weighted_percentile(X.loc[:, col], q=self.up_pct, w=w)
+            iqr = q3 - q1
+            self.lb[col] = q1 - self.range * iqr
+            self.ub[col] = q3 + self.range * iqr
         return self
+
 
     def transform(self, X, **transformparams):
         X = validate_dataframe(X)
@@ -537,5 +563,3 @@ class YeoJohnsonNormalization(BaseEstimator, TransformerMixin):
             Xcol_float = X[col].astype(float)
             X[new_col] = yeojohnson(Xcol_float, lmbda=self.lams[col])
         return X.loc[:, new_col_list]
-
-
