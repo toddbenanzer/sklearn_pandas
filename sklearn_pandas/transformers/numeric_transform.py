@@ -7,6 +7,20 @@ from sklearn_pandas.util import retain_sign, validate_dataframe
 from sklearn.decomposition import PCA, KernelPCA
 
 
+def weighted_percentile(x, q=0.5, w=None):
+    if w is None:
+        w = np.ones(len(x))
+    is_valid = np.isfinite(x) & np.isfinite(w)
+    x_clean = x[is_valid]
+    w_clean = w[is_valid]
+    x_sorted = x_clean[np.argsort(x_clean)]
+    w_sorted = w_clean[np.argsort(w_clean)]
+    cumpct = w_sorted.cumsum() / w_sorted.sum()
+    cumpct = np.append([0.0], cumpct)
+    midpts = (cumpct[:-1] + cumpct[1:]) / 2.0
+    return np.interp(q, midpts, x_sorted)
+
+
 class QuantileBinning(BaseEstimator, TransformerMixin):
 
     def __init__(self, nbins=5, prefix='', suffix='__qbin'):
@@ -16,9 +30,15 @@ class QuantileBinning(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
+        if 'sample_weight' in fitparams:
+            w = fitparams['sample_weight']
+        else:
+            w = pd.Series(np.ones(X.shape[0]))
         self.cuts = {}
         for col in X.columns:
-            cuts = X[col].quantile(q=np.linspace(0 + 1 / self.nbins, 1 - 1 / self.nbins, self.nbins - 1)).tolist()
+            qcuts = np.linspace(0 + 1 / self.nbins, 1 - 1 / self.nbins, self.nbins - 1)
+            #cuts = X[col].quantile(q=qcuts).tolist()
+            cuts = weighted_percentile(X[col], q=qcuts, w=w).tolist()
             self.cuts[col] = [-np.inf, ] + cuts[:] + [np.inf, ]
         return self
 

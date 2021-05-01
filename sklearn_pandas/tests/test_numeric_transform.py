@@ -19,7 +19,7 @@ def test_repeated_value_QuantileBinning():
     qb = QuantileBinning(nbins=100)
     df_out = qb.fit_transform(X)
     assert '(-inf, 1.0]' == str(df_out.iloc[0, 0])
-    assert '(1.95, 2.0]' == str(df_out.iloc[-1, 0])
+    assert '(1.9, 2.0]' == str(df_out.iloc[-1, 0])
 
 
 def test_continuous_input_WinsorizeTransform():
