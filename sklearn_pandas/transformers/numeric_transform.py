@@ -63,9 +63,15 @@ class WinsorizeTransform(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None, **fitparams):
         X = validate_dataframe(X)
+        if 'sample_weight' in fitparams:
+            w = fitparams['sample_weight']
+        else:
+            w = pd.Series(np.ones(X.shape[0]))
+
         self.clips = {}
         for col in X.columns:
-            self.clips[col] = X[col].quantile(q=[self.clip_p, 1 - self.clip_p]).tolist()
+            #self.clips[col] = X[col].quantile(q=[self.clip_p, 1 - self.clip_p]).tolist()
+            self.clips[col] = weighted_percentile(X[col], q=[self.clip_p, 1 - self.clip_p], w=w).tolist()
         return self
 
     def transform(self, X, **transformparams):

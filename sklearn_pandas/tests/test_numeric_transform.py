@@ -26,8 +26,10 @@ def test_continuous_input_WinsorizeTransform():
     X = pd.DataFrame({'A': np.linspace(0, 1, 100000)})
     wt = WinsorizeTransform(clip_p=0.05)
     df_out = wt.fit_transform(X)
-    assert '0.05000000000000001' == str(df_out.iloc[0, 0])
-    assert '0.9499999999999998' == str(df_out.iloc[-1, 0])
+    #assert '0.05000000000000001' == str(df_out.iloc[0, 0])
+    assert 0.05 == pytest.approx(df_out.iloc[0, 0], 0.01)
+    #assert '0.9499999999999998' == str(df_out.iloc[-1, 0])
+    assert 0.95 == pytest.approx(df_out.iloc[-1, 0], 0.01)
 
 
 def test_basic_PandasRobustScaler():
